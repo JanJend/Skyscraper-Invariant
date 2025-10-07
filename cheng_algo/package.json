@@ -1,0 +1,20 @@
+{
+  "name": "my-workspace",
+  "version": "1.0.0",
+  "description": "A sample workspace project",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/my-workspace.git"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
