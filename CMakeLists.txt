@@ -26,10 +26,9 @@ include_directories(${AIDA_DIR})
 include_directories(${PERSISTENCE_ALGEBRA_DIR}/include)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Main HNF executabl
+# Main HNF executable
 add_executable(hnf_main
     hnf_main.cpp
-    src/hnf.cpp
     src/filt_landscape.cpp
 )
 

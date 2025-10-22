@@ -292,7 +292,13 @@ void skyscraper_invariant(const R2Mat& input,
     HN_factors& result,
     vec<vec<SparseMatrix<int>>>& subspaces,
     const pair<r2degree>& bounds) {
+    
     R2Mat X = input;
+
+    if(X.get_num_rows() > 1){
+        X.to_stream_r2(std::cout);
+    }
+
     if(X.get_num_rows() >= 4){
         std::cout << "  Warning: Computing HNF for a module of dimension "
             << X.get_num_rows() << std::endl;
@@ -493,7 +499,7 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
 
 
 
-} // namespace hnf
+
 
 
 // All of the following should normally go in a main.cpp file.
@@ -565,3 +571,5 @@ void write_to_file(std::ostringstream& ostream, std::string& output_file_path, s
         std::cout << "Error: Could not write HN filtration to file: " << output_file_path << std::endl;
     }
 }
+
+} // namespace hnf

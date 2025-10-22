@@ -11,6 +11,7 @@ using namespace graded_linalg;
 
 namespace hnf{
 
+
 void display_help();
 void display_version();
 void write_to_file(std::ostringstream& ostream, std::string& output_file_path, std::string& input_directory, std::string& file_without_extension, std::string& extension, std::string& output_string);
@@ -524,7 +525,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     Outputstream& ostream, 
     const int& grid_length_x, const int& grid_length_y, 
     Container& indecomps) {
-    
+
     vec<Dynamic_HNF> local_grid_row_data;
     vec<vec<SparseMatrix<int>>> subspaces = all_sparse_proper_subspaces(3);
     int grid_size = grid_length_x * grid_length_y;

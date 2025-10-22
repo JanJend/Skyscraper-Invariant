@@ -1,9 +1,12 @@
 #include "hnf_interface.hpp"
+#include "src/hnf.cpp"
 
 
 namespace fs = std::filesystem;
 
 int main(int argc, char** argv){
+
+    
     aida::AIDA_functor decomposer = aida::AIDA_functor();
     
     decomposer.config.exhaustive = false;
