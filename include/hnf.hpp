@@ -9,6 +9,10 @@ using namespace graded_linalg;
 
 namespace hnf{
 
+void display_help();
+void display_version();
+void write_to_file(std::ostringstream& ostream, std::string& output_file_path, std::string& input_directory, std::string& file_without_extension, std::string& extension, std::string& output_string);
+
 template<typename index>
 struct Uni_B1{
     R2GradedSparseMatrix<index> d1;
