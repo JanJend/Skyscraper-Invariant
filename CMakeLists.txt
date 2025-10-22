@@ -4,8 +4,10 @@ project(skyscraper VERSION 1.0 LANGUAGES CXX)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Find Boost
+find_package(Boost REQUIRED COMPONENTS timer system)
 
-# External dependency paths - can be overridden by user
+# Change these paths to wherevery AIDA and Persistence-Algebra are.
 set(AIDA_DIR "${CMAKE_SOURCE_DIR}/../AIDA" CACHE PATH "Path to AIDA directory")
 set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra" CACHE PATH "Path to Persistence-Algebra directory")
 
@@ -22,16 +24,20 @@ endif()
 include_directories(include)
 include_directories(${AIDA_DIR})
 include_directories(${PERSISTENCE_ALGEBRA_DIR}/include)
+include_directories(${Boost_INCLUDE_DIRS})
 
-# Main HNF executable
+# Main HNF executabl
 add_executable(hnf_main
     hnf_main.cpp
     src/hnf.cpp
     src/filt_landscape.cpp
 )
 
-# Landscape from sky executable (doesn't need hnf)
+target_link_libraries(hnf_main ${Boost_LIBRARIES})
+
+# Makes filtered landscapes from .sky files
 add_executable(filt_landscape_from_sky
     filt_landscape_from_sky.cpp
     src/filt_landscape.cpp
 )
+target_link_libraries(filt_landscape_from_sky ${Boost_LIBRARIES})

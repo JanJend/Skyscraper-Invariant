@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef HNF_HEADER_HPP
 #define HNF_HEADER_HPP
 
