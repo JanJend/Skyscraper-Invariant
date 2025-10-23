@@ -7,6 +7,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find Boost
 find_package(Boost REQUIRED COMPONENTS timer system)
 
+# Set build type to Release if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# Set optimization flags for Release
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+
+# Set debug flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+# Add _debug suffix to executables in Debug mode
+set(CMAKE_DEBUG_POSTFIX "_debug")
+
 # Change these paths to wherevery AIDA and Persistence-Algebra are.
 set(AIDA_DIR "${CMAKE_SOURCE_DIR}/../AIDA" CACHE PATH "Path to AIDA directory")
 set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra" CACHE PATH "Path to Persistence-Algebra directory")
@@ -33,10 +46,19 @@ add_executable(hnf_main
 )
 
 target_link_libraries(hnf_main ${Boost_LIBRARIES})
+set_target_properties(hnf_main PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
 # Makes filtered landscapes from .sky files
 add_executable(filt_landscape_from_sky
     filt_landscape_from_sky.cpp
     src/filt_landscape.cpp
 )
+set_target_properties(filt_landscape_from_sky PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+
+# Makes the module to quiver representation conversion
+add_executable(pres_to_quiver
+    pres_to_quiver.cpp
+)
+set_target_properties(pres_to_quiver PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+
 target_link_libraries(filt_landscape_from_sky ${Boost_LIBRARIES})
