@@ -22,10 +22,10 @@ set(CMAKE_DEBUG_POSTFIX "_debug")
 
 # Change these paths to wherevery AIDA and Persistence-Algebra are.
 set(AIDA_DIR "${CMAKE_SOURCE_DIR}/../AIDA" CACHE PATH "Path to AIDA directory")
-set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra" CACHE PATH "Path to Persistence-Algebra directory")
+set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra/include" CACHE PATH "Path to Persistence-Algebra directory")
 
 # Verify that external dependencies exist
-if(NOT EXISTS "${AIDA_DIR}/aida_interface.hpp")
+if(NOT EXISTS "${AIDA_DIR}/include/aida_interface.hpp")
     message(WARNING "AIDA not found at ${AIDA_DIR}. Set AIDA_DIR to correct path.")
 endif()
 
@@ -35,7 +35,8 @@ endif()
 
 # Include directories
 include_directories(include)
-include_directories(${AIDA_DIR})
+include_directories(${AIDA_DIR}/include)
+include_directories(${AIDA_DIR}/src)
 include_directories(${PERSISTENCE_ALGEBRA_DIR}/include)
 include_directories(${Boost_INCLUDE_DIRS})
 
