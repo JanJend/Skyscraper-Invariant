@@ -186,7 +186,7 @@ int main(int argc, char** argv){
     } else {
         fs::path cpp_path = fs::path(__FILE__).parent_path();
         fs::path test_file_folder = cpp_path / "Persistence-Algebra/test_presentations";
-        fs::path ex1 = "two_circles_2_dim1_minpres.scc";
+        fs::path ex1 = "/home/wsljan/MP-Workspace/mpm_generation/hypoxic_FoxP3_dim1_100x100.scc";
         matrix_path = test_file_folder / ex1;
         input_directory = test_file_folder.string();
         filename = ex1.string();

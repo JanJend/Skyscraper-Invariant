@@ -62,3 +62,7 @@ add_executable(pres_to_quiver
 set_target_properties(pres_to_quiver PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
 target_link_libraries(filt_landscape_from_sky ${Boost_LIBRARIES})
+
+install(TARGETS hnf_main filt_landscape_from_sky pres_to_quiver
+    RUNTIME DESTINATION bin
+)
