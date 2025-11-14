@@ -187,9 +187,11 @@ int main(int argc, char** argv){
         fs::path cpp_path = fs::path(__FILE__).parent_path();
         fs::path test_file_folder = cpp_path / "Persistence-Algebra/test_presentations";
         fs::path ex1 = "/home/wsljan/MP-Workspace/mpm_generation/hypoxic_FoxP3_dim1_100x100.scc";
-        matrix_path = test_file_folder / ex1;
+        fs::path ex_sum = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic_FoxP3_dim1.sccsum";
+        matrix_path = test_file_folder / ex_sum;
+        is_decomposed = true;
         input_directory = test_file_folder.string();
-        filename = ex1.string();
+        filename = ex_sum.string();
         size_t dot_position = filename.find_last_of('.');
         file_without_extension = filename.substr(0, dot_position);
         std::cout << "No input file specified. Running on test file: " << matrix_path << std::endl;

@@ -44,6 +44,13 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_executable(hnf_main
     hnf_main.cpp
     src/filt_landscape.cpp
+    ${AIDA_DIR}/src/aida_decompose.cpp
+    ${AIDA_DIR}/src/aida_functions.cpp
+    ${AIDA_DIR}/src/aida_helpers.cpp
+    ${AIDA_DIR}/src/aida_interface.cpp
+    ${AIDA_DIR}/src/block.cpp
+    ${AIDA_DIR}/src/config.cpp
+    ${AIDA_DIR}/src/option_parser.cpp
 )
 
 target_link_libraries(hnf_main ${Boost_LIBRARIES})

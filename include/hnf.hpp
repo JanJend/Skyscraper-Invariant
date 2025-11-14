@@ -400,7 +400,7 @@ void process_grid_cell(
     const pair<r2degree>& slope_bounds,
     aida::AIDA_functor& decomposer) {
     
-    bool test = true;
+    bool test = false;
     
 
     int k = -1;
@@ -603,7 +603,7 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     
     if(is_decomposed){
         vec<R2Mat> matrices;
-        graded_linalg::construct_matrices_from_stream(matrices, istream);
+        graded_linalg::read_sccsum(matrices, istream);
         vec<r2degree> grid_points;
         if(dynamic_grid){
             process_summands_smart_grid(decomposer, ostream, grid_length_x, grid_length_y, matrices);

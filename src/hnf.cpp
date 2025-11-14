@@ -296,10 +296,11 @@ void skyscraper_invariant(const R2Mat& input,
     R2Mat X = input;
 
     if(X.get_num_rows() > 1){
-        X.to_stream_r2(std::cout);
+        
+       // X.to_stream_r2(std::cout);
     }
 
-    if(X.get_num_rows() >= 4){
+    if(X.get_num_rows() >= 6){
         std::cout << "  Warning: Computing HNF for a module of dimension "
             << X.get_num_rows() << std::endl;
     }
@@ -492,7 +493,7 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
             }
         }
     }
-    if (max_dim >= 4){
+    if (max_dim >= 6){
         std::cout << " Careful, there are high-dimensional summands which might slow down HNF computation excessively." << std::endl;
     }  
 }
