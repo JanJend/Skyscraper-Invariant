@@ -153,6 +153,7 @@ int main(int argc, char** argv){
                 break;
             case 'd':
                 is_decomposed = true;
+                std::cout << "Input file is assumed to be already decomposed." << std::endl;
                 break;
             case 'g':
                 diagonal_output = true;
@@ -187,7 +188,7 @@ int main(int argc, char** argv){
         fs::path cpp_path = fs::path(__FILE__).parent_path();
         fs::path test_file_folder = cpp_path / "Persistence-Algebra/test_presentations";
         fs::path ex1 = "/home/wsljan/MP-Workspace/mpm_generation/hypoxic_FoxP3_dim1_100x100.scc";
-        fs::path ex_sum = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic_FoxP3_dim1.sccsum";
+        fs::path ex_sum = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res.sccsum";
         matrix_path = test_file_folder / ex_sum;
         is_decomposed = true;
         input_directory = test_file_folder.string();
@@ -204,7 +205,11 @@ int main(int argc, char** argv){
                 std::cerr << "Error: Could not open input file: " << matrix_path << std::endl;
                 return 0;
         }
-         std::cout << "Decomposing, then generating submodules at grid points and decomposing them again of " + filename << std::endl;
+        if(is_decomposed){
+            std::cout << "Running HNF on already decomposed input file: " + filename << std::endl;
+        } else {
+            std::cout << "First decomposing with AIDA, then computing HNF on " + filename << std::endl;
+        }
          ostream << std::fixed << std::setprecision(17);
         hnf::full_grid_induced_decomposition(decomposer, istream, ostream, show_indecomp_statistics, show_runtime_statistics, true, is_decomposed);
          

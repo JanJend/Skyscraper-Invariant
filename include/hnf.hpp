@@ -78,7 +78,7 @@ void to_stream(Outputstream& ostream, Module_w_slope& scss){
         }
         ostream << std::endl;
     } else {
-        std::cerr << "  Passing a submodule of dimension " << scss.first.d1.get_num_rows() << std::endl;
+        std::cout << "  Passing a submodule of dimension " << scss.first.d1.get_num_rows() << std::endl;
         ostream << scss.second << std::endl;
         scss.first.d1.to_stream_r2(ostream);
     }
@@ -257,7 +257,7 @@ std::tuple<r2degree, r2degree, r2degree, pair<r2degree>> compute_bounds_and_grid
     const int& grid_length_x,
     const int& grid_length_y) {
 
-    const double range_extension = 0.3;
+    const double range_extension = 0.1;
     const double slope_overlap = 0.1;
 
     auto [lower_bound, upper_bound] = indecomps.front().bounding_box();
@@ -561,20 +561,20 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     // Start one step too early for better indexing:
     r2degree current_grid_degree = lower_bound - grid_step;
 
-    for(int i = 0; i < grid_length_y; i++){ 
+    for(int j = 0; j < grid_length_y; j++){ 
         current_grid_degree.first = lower_bound.first - grid_step.first; // Reset x-coordinate for each y-coordinate
-        current_grid_degree.second = lower_bound.second + i*grid_step.second;
+        current_grid_degree.second = lower_bound.second + j*grid_step.second;
         // First in y direction, we recompute all local decompositions whenever necessary.
         update_HNF_rows_at_y_level(current_grid_degree, indecomps, grid_locations, local_grid_row_data, decomposer, slope_bounds);
         
-        for(int j = 0; j < grid_length_x; j++){
+        for(int i = 0; i < grid_length_x; i++){
             current_grid_degree.first += grid_step.first; 
             // Then we need to check if we have crossed into a new grid-square in any local grid.    
             update_grid_locations_x(current_grid_degree, indecomps, grid_locations);
 
             ostream << "G," << i << "," << j << ", " << current_grid_degree << std::endl;
             if (progress_bar) {
-                int points_processed = i * grid_length_y + j;
+                int points_processed = j * grid_length_x + i;
                 std::string name = "Grid point";
                 show_progress_bar(points_processed, grid_size, name);
             }
@@ -598,7 +598,7 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     bool show_indecomp_statistics, bool show_runtime_statistics, 
     bool dynamic_grid = true,
     bool is_decomposed = false,
-    const int& grid_length_x = 100, const int& grid_length_y = 100) {
+    const int& grid_length_x = 200, const int& grid_length_y = 200) {
     
     
     if(is_decomposed){

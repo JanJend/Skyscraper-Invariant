@@ -27,6 +27,8 @@ GridData bars_from_sky(const std::string& filename) {
     std::getline(file, line);
     std::sscanf(line.c_str(), "%d,%d", &result.n_x, &result.n_y);
     
+    std::cout << "Grid dimensions for filtered landscape: " << result.n_x << " x " << result.n_y << std::endl;
+
     // Line 3: Lattice info - extract coordinates
     std::getline(file, line);
     std::regex coord_regex(R"(\((-?[0-9.eE+-]+),\s*(-?[0-9.eE+-]+)\))");
@@ -126,7 +128,8 @@ GridData bars_from_sky(const std::string& filename) {
             result.bars[i][j].push_back({theta, length});
         }
     }
-    result.n_y -= 30; // Adjust for extra grid points
+    // result.n_y -= 30; // Adjust for extra grid points
+    std::cout << "Loaded landscape grid of size " << result.n_x << " x " << result.n_y << std::endl;
     return result;
 }
 
@@ -209,8 +212,8 @@ void compute_landscape(const GridData& data, const std::string& output_filename,
     std::ofstream out(output_filename);
     out << std::fixed << std::setprecision(14);
     out << "Sky Landscape " << data.n_x << " " << data.n_y << " " << k << " " << theta_min << "\n";
-    for (int i = 0; i < data.n_x; i++) {
-        for (int j = 0; j < data.n_y; j++) {
+    for (int j = 0; j < data.n_y; j++) {
+        for (int i = 0; i < data.n_x; i++) {
             out << landscape[i][j] << " ";
         }
         out << "\n";

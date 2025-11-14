@@ -494,7 +494,7 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
         }
     }
     if (max_dim >= 6){
-        std::cout << " Careful, there are high-dimensional summands which might slow down HNF computation excessively." << std::endl;
+        // std::cout << " Careful, there are high-dimensional summands which might slow down HNF computation excessively." << std::endl;
     }  
 }
 

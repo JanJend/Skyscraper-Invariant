@@ -107,7 +107,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
             if grid_data[i, j] is not None:
                 # Image 1: Grayscale based on module count
                 num_modules = len(grid_data[i, j]['modules'])
-                img1[i, j] = num_modules / max_modules  # Normalize based on max number of modules
+                img1[i, j] = img1[i, j] = np.log1p(num_modules) / np.log1p(max_modules)  # log scale of hilbert function
                 # Image 2: Grayscale based on sum of squared and inverted slopes
                 from math import log
 
@@ -117,8 +117,8 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
                 img2[i, j] = slope_sum
                 slope_sum = 0.0
                 for slope, relations in grid_data[i, j]['modules']:
-                    slope_sum += 1/(slope**2)  # squared slopes
-                img3[i, j] = slope_sum
+                    slope_sum += 1/slope # log slopes
+                img3[i, j] = np.log1p(slope_sum)
 
     # Scale img2 so that the highest value becomes 1 (white)
     img2 = img2 / np.max(img2)  # Normalize to [0, 1] for proper grayscale representation
@@ -154,7 +154,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
     axes[0].set_yticklabels([f'{lattice_coords[0 * n_j + j][1]:.2f}' for j in y_tick_indices])
 
 
-    # Image 2: Grayscale based on slope sum (inverted and squared)
+    # Image 2: Grayscale based on slope sum 
     axes[1].imshow(img2_resized, cmap='gray', origin='upper', vmin=0, vmax=1)
     axes[1].set_title('Inverse Slope Sum')
     axes[1].invert_yaxis()  # Flip the Y-axis for image 2
@@ -167,9 +167,9 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
     axes[1].set_xticklabels([f'{lattice_coords[i * n_j + 0][0]:.2f}' for i in x_tick_indices])
     axes[1].set_yticklabels([f'{lattice_coords[0 * n_j + j][1]:.2f}' for j in y_tick_indices])
 
-    # Image 3: Grayscale based on squared slope sum 
+    # Image 3: Grayscale based on log slope sum 
     axes[2].imshow(img3_resized, cmap='gray', origin='upper', vmin=0, vmax=1)
-    axes[2].set_title('Inverse Slope^2 Sum')
+    axes[2].set_title('Inverse log Slope Sum')
     axes[2].invert_yaxis()  # Flip the Y-axis for image 2
     axes[2].set_xlabel('Scale')  # Set X-axis label
     axes[2].set_ylabel('CoDensity')  # Set Y-axis label
