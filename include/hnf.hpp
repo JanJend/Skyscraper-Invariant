@@ -598,7 +598,7 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     bool show_indecomp_statistics, bool show_runtime_statistics, 
     bool dynamic_grid = true,
     bool is_decomposed = false,
-    const int& grid_length_x = 200, const int& grid_length_y = 200) {
+    const int& grid_length_x = 20, const int& grid_length_y = 20) {
     
     
     if(is_decomposed){

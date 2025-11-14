@@ -141,7 +141,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
     y_tick_positions = y_tick_indices * m
 
     # Image 1: Grayscale based on module count
-    axes[0].imshow(img1_resized, cmap='gray', origin='upper', vmin=0, vmax=1)
+    axes[0].imshow(img1_resized.T, cmap='gray', origin='upper', vmin=0, vmax=1)
     axes[0].set_title('Dimension')
     axes[0].invert_yaxis()  # Flip the Y-axis for image 1
     axes[0].set_xlabel('Scale')  # Set X-axis label
@@ -155,7 +155,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
 
 
     # Image 2: Grayscale based on slope sum 
-    axes[1].imshow(img2_resized, cmap='gray', origin='upper', vmin=0, vmax=1)
+    axes[1].imshow(img2_resized.T, cmap='gray', origin='upper', vmin=0, vmax=1)
     axes[1].set_title('Inverse Slope Sum')
     axes[1].invert_yaxis()  # Flip the Y-axis for image 2
     axes[1].set_xlabel('Scale')  # Set X-axis label
@@ -168,7 +168,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
     axes[1].set_yticklabels([f'{lattice_coords[0 * n_j + j][1]:.2f}' for j in y_tick_indices])
 
     # Image 3: Grayscale based on log slope sum 
-    axes[2].imshow(img3_resized, cmap='gray', origin='upper', vmin=0, vmax=1)
+    axes[2].imshow(img3_resized.T, cmap='gray', origin='upper', vmin=0, vmax=1)
     axes[2].set_title('Inverse log Slope Sum')
     axes[2].invert_yaxis()  # Flip the Y-axis for image 2
     axes[2].set_xlabel('Scale')  # Set X-axis label

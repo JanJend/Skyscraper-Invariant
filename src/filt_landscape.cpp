@@ -210,7 +210,7 @@ void compute_landscape(const GridData& data, const std::string& output_filename,
     
     // Write output
     std::ofstream out(output_filename);
-    out << std::fixed << std::setprecision(14);
+    out << std::fixed << std::setprecision(8);
     out << "Sky Landscape " << data.n_x << " " << data.n_y << " " << k << " " << theta_min << "\n";
     for (int j = 0; j < data.n_y; j++) {
         for (int i = 0; i < data.n_x; i++) {

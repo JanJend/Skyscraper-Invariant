@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
         return 1;
     } 
     
-    std::string input_file = (argc >= 2) ? argv[1] : "/home/wsljan/AIDA/tests/test_presentations/two_circles.sky";
+    std::string input_file = (argc >= 2) ? argv[1] : "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut.sky";
     
     double theta = (argc >= 4) ? std::stod(argv[3]) : 0.0;
     int k = (argc >= 5) ? std::stoi(argv[4]) : 1;

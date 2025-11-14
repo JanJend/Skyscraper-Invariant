@@ -143,7 +143,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
 
 
     # Image 1: Grayscale based on module count
-    axes[0].imshow(img1_resized, cmap='gray', origin='lower', vmin=0, vmax=1)
+    axes[0].imshow(img1_resized.T, cmap='gray', origin='lower', vmin=0, vmax=1)
     axes[0].set_title('Dimension')
     axes[0].set_xlabel('Scale')  # Set X-axis label
     axes[0].set_ylabel('CoDensity')  # Set Y-axis label
@@ -156,7 +156,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
     axes[0].set_yticklabels([f'{lattice_coords[0 * n_j + j][1]:.2f}' for j in y_tick_indices])
 
     # Image 2: Grayscale based on slope sum (inverted and squared)
-    axes[1].imshow(img2_resized, cmap='gray', origin='lower', vmin=0, vmax=1)
+    axes[1].imshow(img2_resized.T, cmap='gray', origin='lower', vmin=0, vmax=1)
     axes[1].set_title('log Slope Sum')
     axes[1].set_xlabel('Scale')  # Set X-axis label
     axes[1].set_ylabel('CoDensity')  # Set Y-axis label
@@ -168,7 +168,7 @@ def generate_grayscale_images(n_i, n_j, grid_data, lattice_coords, output_file, 
     axes[1].set_yticklabels([f'{lattice_coords[0 * n_j + j][1]:.2f}' for j in y_tick_indices])
 
     # Image 3: Grayscale based on slope sum 
-    axes[2].imshow(img3_resized, cmap='gray', origin='lower', vmin=0, vmax=1)
+    axes[2].imshow(img3_resized.T, cmap='gray', origin='lower', vmin=0, vmax=1)
     axes[2].set_title('log Slope^2 Sum')
     axes[2].set_xlabel('Scale')  # Set X-axis label
     axes[2].set_ylabel('CoDensity')  # Set Y-axis label
