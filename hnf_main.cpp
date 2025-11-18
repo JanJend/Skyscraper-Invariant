@@ -30,6 +30,9 @@ int main(int argc, char** argv){
     bool test_files = false;
     bool is_decomposed = false;
 
+    int grid_length_x = 200;
+    int grid_length_y = 200;
+
     std::string input_directory;
     std::string filename;
     std::string matrix_path;
@@ -64,10 +67,9 @@ int main(int argc, char** argv){
         {"version", no_argument, 0, 'v'},
         {"output", optional_argument, 0, 'o'},
         {"bruteforce", no_argument, 0, 'b'},
-        {"sort", no_argument, 0, 's'},
         {"exhaustive", no_argument, 0, 'e'},
-        {"statistics", no_argument, 0, 't'},
-        {"runtime", no_argument, 0, 'r'},
+        {"statistics", no_argument, 0, 's'},
+        {"runtime", no_argument, 0, 't'},
         {"progress", no_argument, 0, 'p'},
         {"basechange", no_argument, 0, 'c'},
         {"less_console", no_argument, 0, 'l'},
@@ -80,6 +82,7 @@ int main(int argc, char** argv){
         {"test_files", no_argument, 0, 'x'},
         {"is_decomposed", no_argument, 0, 'd'},
         {"diagonal", no_argument, 0, 'g'},
+        {"resolution", required_argument, 0, 'r'},
         {0, 0, 0, 0}
     };
 
@@ -110,16 +113,30 @@ int main(int argc, char** argv){
                 decomposer.config.exhaustive = true;
                 break;
             case 's':
-                decomposer.config.sort = true;
+                show_indecomp_statistics = true;
                 break;
             case 'e':
                 decomposer.config.exhaustive = true;
                 break;
             case 't':
-                show_indecomp_statistics = true;
+                show_runtime_statistics = true;
                 break;
             case 'r':
-                show_runtime_statistics = true;
+                // Set resolution of grid
+                if (optarg) {
+                    std::string res_arg = std::string(optarg);
+                    size_t comma_pos = res_arg.find(',');
+                    if (comma_pos != std::string::npos) {
+                        grid_length_x = std::stoi(res_arg.substr(0, comma_pos));
+                        grid_length_y = std::stoi(res_arg.substr(comma_pos + 1));
+                    } else {
+                        std::cerr << "Error: Resolution argument must be in the format 'x,y'." << std::endl;
+                        return 1;
+                    }
+                } else {    
+                    std::cout << "Error: No resolution argument provided." << std::endl;
+                    return 1;
+                }
                 break;
             case 'p':
                 decomposer.config.progress = false;
@@ -187,8 +204,8 @@ int main(int argc, char** argv){
     } else {
         fs::path cpp_path = fs::path(__FILE__).parent_path();
         fs::path test_file_folder = cpp_path / "Persistence-Algebra/test_presentations";
-        fs::path ex1 = "/home/wsljan/MP-Workspace/mpm_generation/hypoxic_FoxP3_dim1_100x100.scc";
-        fs::path ex_sum = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res.sccsum";
+        fs::path ex1 = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut.scc";
+        fs::path ex_sum = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut.sccsum";
         matrix_path = test_file_folder / ex_sum;
         is_decomposed = true;
         input_directory = test_file_folder.string();
@@ -210,8 +227,8 @@ int main(int argc, char** argv){
         } else {
             std::cout << "First decomposing with AIDA, then computing HNF on " + filename << std::endl;
         }
-         ostream << std::fixed << std::setprecision(17);
-        hnf::full_grid_induced_decomposition(decomposer, istream, ostream, show_indecomp_statistics, show_runtime_statistics, true, is_decomposed);
+         ostream << std::fixed << std::setprecision(10);
+        hnf::full_grid_induced_decomposition(decomposer, istream, ostream, show_indecomp_statistics, show_runtime_statistics, true, is_decomposed, grid_length_x, grid_length_y);
          
      } else {
         // Run on some test files.

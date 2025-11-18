@@ -1,7 +1,38 @@
 #include "hnf.hpp"
 
 namespace hnf {
-// Uni_B1 template member function implementations
+
+
+template<typename index>
+void Uni_B1<index>::compute_slope_subdivision(const pair<r2degree>& bounds, const vec<vec<SparseMatrix<int>>>& subspaces){
+    auto& X = this->d1;
+    int k = X.get_num_rows();
+    if(k == 1){
+        std::cout << "Tried to compute slope subdivision for a module of dimension 1. Nothing to do." << std::endl;
+        return;
+    }
+    vec<std::array<double, 4>> slope_polynomials;
+    if(subspaces.size() < k){
+            std::cerr << "Have not loaded enough subspaces" << std::endl;
+            std::exit(1);
+    }
+
+    for(auto ungraded_subspace : subspaces[k-1]){
+        int num_gens = ungraded_subspace.get_num_cols();
+        R2Mat subspace = R2Mat(ungraded_subspace);
+        subspace.row_degrees = X.row_degrees;
+        subspace.col_degrees = vec<r2degree>(num_gens, X.row_degrees[0]);
+            assert(subspace.get_num_rows() == X.get_num_rows());
+            assert(subspace.get_num_cols() == num_gens);
+        R2Mat submodule_pres = X.submodule_generated_by(subspace);
+        Uni_B1<int> res(submodule_pres);
+        slope_polynomials.emplace_back( res.area_polynomial(bounds) );
+        }
+    }
+    return std::make_pair(scss, max_slope);
+}
+
+
 template<typename index>
 Uni_B1<index>::Uni_B1(R2GradedSparseMatrix<index>&& d1_, bool is_minimal)
     : d1(std::move(d1_)) {

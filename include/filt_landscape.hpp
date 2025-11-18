@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <string>
+#include "file_reader.hpp"
+
+namespace hnf {
 
 struct GridPoint {
     int i, j;
@@ -10,24 +13,11 @@ struct GridPoint {
 };
 
 
-struct Bar {
-    double theta;
-    double length;
-};
-
-struct GridData {
-    int n_x, n_y;
-    double start_x, start_y, end_x, end_y, step_x, step_y;
-    double slope;
-    std::vector<std::vector<std::vector<Bar>>> bars;
-};
-
-// Function declarations
-GridData bars_from_sky(const std::string& filename);
-
 int get_diagonal_index(int i, int j, const GridData& data);
 
 void compute_landscape(const GridData& data, const std::string& output_filename, 
                       double theta, int k);
+
+} // namespace hnf
 
 #endif // LANDSCAPE_HPP

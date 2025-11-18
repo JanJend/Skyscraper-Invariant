@@ -8,131 +8,7 @@
 #include <iomanip>
 #include <cassert>
 
-GridData bars_from_sky(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        throw std::runtime_error("Cannot open file: " + filename);
-    }
-    
-    GridData result;
-    std::string line;
-    
-    // Line 1: Must be "HNF"
-    std::getline(file, line);
-    if (line.find("HNF") == std::string::npos) {
-        throw std::runtime_error("First line must be 'HNF'");
-    }
-    
-    // Line 2: Grid dimensions
-    std::getline(file, line);
-    std::sscanf(line.c_str(), "%d,%d", &result.n_x, &result.n_y);
-    
-    std::cout << "Grid dimensions for filtered landscape: " << result.n_x << " x " << result.n_y << std::endl;
-
-    // Line 3: Lattice info - extract coordinates
-    std::getline(file, line);
-    std::regex coord_regex(R"(\((-?[0-9.eE+-]+),\s*(-?[0-9.eE+-]+)\))");
-    auto coords_begin = std::sregex_iterator(line.begin(), line.end(), coord_regex);
-    auto coords_end = std::sregex_iterator();
-    
-    std::vector<std::pair<double, double>> coords;
-    for (auto it = coords_begin; it != coords_end; ++it) {
-        double x = std::stod((*it)[1]);
-        double y = std::stod((*it)[2]);
-        coords.push_back({x, y});
-    }
-    
-    if (coords.size() < 3) {
-        throw std::runtime_error("Expected at least 3 coordinate pairs");
-    }
-    
-    // Extract lattice vectors
-    result.start_x = coords[0].first;
-    result.start_y = coords[0].second;
-    result.end_x = coords[1].first;
-    result.end_y = coords[1].second;
-    result.step_x = coords[2].first;
-    result.step_y = coords[2].second;
-    result.slope = result.step_y / result.step_x;
-    
-    // Initialize bars grid
-    result.bars.resize(result.n_x, std::vector<std::vector<Bar>>(result.n_y));
-    
-    // Process grid points and stable modules
-    std::pair<double, double> current_position;
-    int i = -1, j = -1;
-    
-    while (std::getline(file, line)) {
-        // Trim whitespace
-        line.erase(0, line.find_first_not_of(" \t\r\n"));
-        line.erase(line.find_last_not_of(" \t\r\n") + 1);
-        
-        if (line.empty()) continue;
-        
-        if (line.substr(0, 2) == "G,") {
-            // Grid point line
-            std::regex grid_regex(R"(G,(\d+),(\d+),\s*\(([^,]+),([^)]+)\))");
-            std::smatch match;
-            if (std::regex_match(line, match, grid_regex)) {
-                i = std::stoi(match[1]);
-                j = std::stoi(match[2]);
-                current_position.first = std::stod(match[3]);
-                current_position.second = std::stod(match[4]);
-            }
-        } else {
-
-            std::istringstream iss(line);
-            std::string token;
-            
-            // First token is slope
-            std::getline(iss, token, ',');
-            double theta = std::stod(token);
-            
-            // Parse relations
-            std::vector<std::pair<double, double>> relations;
-            std::regex rel_regex(R"(\(([^;]+);([^)]+)\))");
-            
-            while (std::getline(iss, token, ',')) {
-                std::smatch rel_match;
-                if (std::regex_search(token, rel_match, rel_regex)) {
-                    double x = std::stod(rel_match[1]);
-                    double y = std::stod(rel_match[2]);
-                    relations.push_back({x, y});
-                }
-            }
-            
-            if (relations.empty()) continue;
-            
-            // Convert to relative coordinates and find intersections
-            std::vector<std::pair<double, double>> candidates;
-            for (const auto& [x, y] : relations) {
-                double rel_x = x - current_position.first;
-                double rel_y = y - current_position.second;
-                
-                double int_x, int_y;
-                if (rel_y <= result.slope * rel_x) {
-                    int_x = rel_x;
-                    int_y = result.slope * rel_x;
-                } else {
-                    int_y = rel_y;
-                    int_x = rel_y / result.slope;
-                }
-                candidates.push_back({int_x, int_y});
-            }
-            
-            // Choose minimum candidate
-            auto min_candidate = *std::min_element(candidates.begin(), candidates.end());
-            
-            // Calculate length (magnitude)
-            double length = min_candidate.first;
-            result.bars[i][j].push_back({theta, length});
-        }
-    }
-    // result.n_y -= 30; // Adjust for extra grid points
-    std::cout << "Loaded landscape grid of size " << result.n_x << " x " << result.n_y << std::endl;
-    return result;
-}
-
+namespace hnf {
 
 // obsolete
 int get_diagonal_index(int i, int j, const GridData& data) {
@@ -203,6 +79,9 @@ void compute_landscape(const GridData& data, const std::string& output_filename,
                 double value = std::max(0.0, d - std::abs(d - t * data.step_x));
                 if (value > landscape[i + t][j + t]) {
                     landscape[i + t][j + t] = value;
+                } 
+                if(t > 0 && value == 0.0){
+                    break;
                 }
             }
         }
@@ -218,4 +97,8 @@ void compute_landscape(const GridData& data, const std::string& output_filename,
         }
         out << "\n";
     }
+    std::cout << "Landscape written to " << output_filename << std::endl;
+    out.close();
 }
+
+} // namespace hnf

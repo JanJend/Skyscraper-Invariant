@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read the file
-with open('/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut_landscape_0.000000_1.txt', 'r') as f:
+with open('/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut_landscape_500.00_1.txt', 'r') as f:
     lines = f.readlines()
 
 # Parse first line to get dimensions

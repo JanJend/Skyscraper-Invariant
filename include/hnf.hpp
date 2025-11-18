@@ -6,21 +6,56 @@
 #include "aida_interface.hpp"
 #include <unistd.h>
 #include <getopt.h>
+#include <H5Cpp.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Env_plane_traits_3.h>
+#include <CGAL/envelope_3.h>
 
+
+using namespace H5;
+// To-Do: Implement hdf5 output for the skyscraper invariant
 using namespace graded_linalg;
 
 namespace hnf{
+
+template<typename index>
+struct face_data{
+    SparseMatrix<int> subspace;
+    std::array<double, 4> area_polynomial;
+    std::unique_ptr<Uni_B1<index>> quotient_ptr = std::make_unique<Uni_B1<index>>();
+};
+
+std::unordered_map<
+
+typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
+typedef CGAL::Env_plane_traits_3<Kernel> Traits;
+typedef Traits::Surface_3 Plane_3;
+typedef CGAL::Envelope_diagram_2<Traits> Envelope_diagram;
+template<typename index>
+using Dcel = CGAL::Arr_face_extended_dcel<Traits_3, Face_data<index>>;
+template<typename index>
+using Envelope_diagram = CGAL::Envelope_diagram_2<Traits_3, Dcel<index>>;
+
+template<typename index>
+struct Slope_subdivision {
+    Envelope_diagram<index> diagram;
+};
+
+
 
 
 void display_help();
 void display_version();
 void write_to_file(std::ostringstream& ostream, std::string& output_file_path, std::string& input_directory, std::string& file_without_extension, std::string& extension, std::string& output_string);
 
+
+
 template<typename index>
 struct Uni_B1{
     R2GradedSparseMatrix<index> d1;
     R2GradedSparseMatrix<index> d2;
     std::array<double, 4> area_polynomial;
+    Slope_subdivision slope_subdiv;
 
     Uni_B1() = default;
     Uni_B1(R2GradedSparseMatrix<index>&& d1_, bool is_minimal = false);
@@ -36,6 +71,8 @@ struct Uni_B1{
     double slope() const;
     double slope(const r2degree& bound) const;
     double slope(const pair<r2degree>& bounds) const;
+
+    void compute_slope_subdivision(const pair<r2degree>& bounds);
 };
 
 using Block = aida::Block;
@@ -239,6 +276,16 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
 
 }
 
+
+
+/**
+* @brief this struct stores the local data of an indecomposable X for a whole row of its grid cells.
+* for each cell in position i, with corner alpha, 
+* indecomposable_summands[i] stores the indecomposable summands of \langle X_\alpha \rangle
+* Slope_subdivisions[i] stores the slope subdivisions of those summands of dimension > 1.
+* 
+* //TO-DO: Probably these should be lists, not vectors.
+*/
 struct Dynamic_HNF {
     vec<vec<Uni_B1<int>>> indecomposable_summands;
     vec<int> grid_ind_dimensions;
@@ -446,15 +493,16 @@ void process_grid_cell(
 
         
         for( Uni_B1<int>& summand : local_summands){
+            auto shifted_summand = summand;
             r2degree verschiebung = current_grid_degree - local_grid_degree;
-            if( summand.d1.get_num_rows() == 0){
+            if( shifted_summand.d1.get_num_rows() == 0){
                 std::cout << " Empty summands should have been filtered out." << std::endl;
                 assert(false);
-            } else if(summand.d1.get_num_rows() == 1){
-                double slope = summand.evaluate_slope_polynomial(verschiebung);
+            } else if(shifted_summand.d1.get_num_rows() == 1){
+                double slope = shifted_summand.evaluate_slope_polynomial(verschiebung);
                 if(test){
-                    double area = summand.evaluate_area_polynomial(verschiebung);
-                    R2Mat test_cutoff = summand.d1.submodule_generated_at(current_grid_degree);
+                    double area = shifted_summand.evaluate_area_polynomial(verschiebung);
+                    R2Mat test_cutoff = shifted_summand.d1.submodule_generated_at(current_grid_degree);
                     if(test_cutoff.get_num_rows() != 0){
                         Uni_B1<int> test_summand(test_cutoff);
                         // double test_slope = test_summand.slope(slope_bounds);
@@ -467,10 +515,10 @@ void process_grid_cell(
                             std::cout << "  Local grid degree: " << local_grid_degree << std::endl;
                             std::cout << "  i: " << i << ", j: " << j << ", k: " << k << std::endl;
                             std::cout << "  Summand: " << std::endl;
-                            summand.d1.print_graded();
+                            shifted_summand.d1.print_graded();
                             std::cout << "  area polynomial: " << 
-                                summand.area_polynomial[0] << "  " << summand.area_polynomial[1] << "  " << 
-                                summand.area_polynomial[2] << "  " << summand.area_polynomial[3] << std::endl;
+                                shifted_summand.area_polynomial[0] << "  " << shifted_summand.area_polynomial[1] << "  " << 
+                                shifted_summand.area_polynomial[2] << "  " << shifted_summand.area_polynomial[3] << std::endl;
                             std::cout << "  Verschiebung: " << verschiebung << std::endl;
                             std::cout << "  Slope bounds: " << slope_bounds.first << " " << slope_bounds.second << std::endl;
                             auto normalisation = slope_bounds.second - slope_bounds.first;
@@ -483,19 +531,19 @@ void process_grid_cell(
                 }
                 // TO-DO: summand is the original local summand, we need to cut it off at the current grid degree,
                 // Even if the slope is already correctly computed by the polynomial.
-                summand.d1.set_all_generator_degrees(current_grid_degree);
-                summand.d1.column_reduction_graded();
-                composition_factors[i][j].emplace_back(std::make_pair(summand, slope));
+                shifted_summand.d1.set_all_generator_degrees(current_grid_degree);
+                shifted_summand.d1.column_reduction_graded();
+                composition_factors[i][j].emplace_back(std::make_pair(shifted_summand, slope));
                 if(test){
-                    copy_factors.emplace_back(std::make_pair(summand, slope));
+                    copy_factors.emplace_back(std::make_pair(shifted_summand, slope));
                 }
                 grid_ind_dimensions.push_back(1);
             } else {
-                if (summand.d1.get_num_rows() > subspaces.size()) {
-                    fill_up_subspaces(subspaces, summand.d1.get_num_rows());
+                if (shifted_summand.d1.get_num_rows() > subspaces.size()) {
+                    fill_up_subspaces(subspaces, shifted_summand.d1.get_num_rows());
                 }
-                grid_ind_dimensions.push_back(summand.d1.get_num_rows());
-                auto cut_off = summand.d1;
+                grid_ind_dimensions.push_back(shifted_summand.d1.get_num_rows());
+                auto cut_off = shifted_summand.d1;
                 cut_off.set_all_generator_degrees(current_grid_degree);
                 if(test){
                     skyscraper_invariant(cut_off, copy_factors, subspaces, slope_bounds);
@@ -598,7 +646,7 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     bool show_indecomp_statistics, bool show_runtime_statistics, 
     bool dynamic_grid = true,
     bool is_decomposed = false,
-    const int& grid_length_x = 20, const int& grid_length_y = 20) {
+    const int& grid_length_x = 200, const int& grid_length_y = 200) {
     
     
     if(is_decomposed){
