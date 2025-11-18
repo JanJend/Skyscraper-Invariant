@@ -2,9 +2,121 @@
 
 namespace hnf {
 
+struct r3_point_w_number{
+    std::array<double, 3> point;
+    int number;
+};
 
 template<typename index>
-void Uni_B1<index>::compute_slope_subdivision(const pair<r2degree>& bounds, const vec<vec<SparseMatrix<int>>>& subspaces){
+Envelope_diagram<index> subdivision_from_polynomials(const vec<std::array<double,4>>& polynomials, 
+    const r2degree& cell_start, const r2degree& cell_end) {
+
+    std::vector<Point_3> dual_points;
+    // TO-Do: filter planes which are clearly too large
+
+    for (size_t i = 0; i < polynomials.size(); i++) {
+        auto& poly = polynomials[i];
+        double c = poly[0];
+        double a = poly[1];
+        double b = poly[2]; 
+
+        // Plane equation: ax + by + c = z
+        // Dual point: (a,b,-c)
+        dual_points.push_back(Point_3(a, b, -c));
+    }
+
+    // Compute 3D convex hull
+    Polyhedron hull;
+    CGAL::convex_hull_3(dual_points.begin(), dual_points.end(), hull);
+    //TO-DO: Check the following, AI generated code
+    // Extract lower facets and their edges
+    std::vector<Segment_2> segments;
+    std::map<Segment_2, size_t> segment_to_poly; // Map segment to polynomial index
+  
+    for (auto fit = hull.facets_begin(); fit != hull.facets_end(); ++fit) {
+        // Check if facet is part of lower hull (normal has negative z-component)
+        auto he = fit->halfedge();
+        Point_3 p1 = he->vertex()->point();
+        Point_3 p2 = he->next()->vertex()->point();
+        Point_3 p3 = he->next()->next()->vertex()->point();
+        
+        auto normal = CGAL::cross_product(p2 - p1, p3 - p1);
+        
+        if (normal.z() < 0) { // Lower facet
+            // Find which original polynomial this facet corresponds to
+            size_t poly_idx = 0;
+            for (size_t i = 0; i < dual_points.size(); ++i) {
+                if (p1 == dual_points[i] || p2 == dual_points[i] || p3 == dual_points[i]) {
+                    // Check if all three vertices lie on plane defined by polynomial i
+                    auto check_point_on_plane = [&](const Point_3& p, size_t idx) {
+                        const auto& poly = polynomials[idx];
+                        return std::abs(poly[1] * p.x() + poly[2] * p.y() + poly[0] - (-p.z())) < 1e-9;
+                    };
+                    
+                    if (check_point_on_plane(p1, i) && 
+                        check_point_on_plane(p2, i) && 
+                        check_point_on_plane(p3, i)) {
+                        poly_idx = i;
+                        break;
+                    }
+                }
+            }
+            
+            // Project facet edges to 2D
+            auto he_circ = fit->halfedge();
+            do {
+                Point_3 v1 = he_circ->vertex()->point();
+                Point_3 v2 = he_circ->next()->vertex()->point();
+                Point_2 p1_2d(v1.x(), v1.y());
+                Point_2 p2_2d(v2.x(), v2.y());
+                
+                Segment_2 seg(p1_2d, p2_2d);
+                segments.push_back(seg);
+                segment_to_poly[seg] = poly_idx;
+                
+                he_circ = he_circ->next();
+            } while (he_circ != fit->halfedge());
+        }
+    }
+  
+    // Step 4: Build arrangement with bounding box
+    Arrangement<index> arr;
+    
+    // Insert bounding box
+    double x_min = cell_start[0], x_max = cell_end[0];
+    double y_min = cell_start[1], y_max = cell_end[1];
+    
+    std::vector<Segment_2> bbox_segments = {
+        Segment_2(Point_2(x_min, y_min), Point_2(x_max, y_min)),
+        Segment_2(Point_2(x_max, y_min), Point_2(x_max, y_max)),
+        Segment_2(Point_2(x_max, y_max), Point_2(x_min, y_max)),
+        Segment_2(Point_2(x_min, y_max), Point_2(x_min, y_min))
+    };
+    
+    CGAL::insert(arr, bbox_segments.begin(), bbox_segments.end());
+    CGAL::insert(arr, segments.begin(), segments.end());
+  
+    // Step 5: Assign face data based on which polynomial defines each face
+    for (auto fit = arr.faces_begin(); fit != arr.faces_end(); ++fit) {
+        if (!fit->is_unbounded()) {
+            // Find representative point inside face
+            // Then determine which polynomial is minimal at that point
+            // (simplified - you'd need proper point-in-polygon testing)
+            
+            // For now, assign the data structure
+            fit->data().slope_polynomial = polynomials[0]; // Replace with proper lookup
+            // Initialize other fields as needed
+        }
+    }
+  
+    return arr;
+
+}
+
+template<typename index>
+void Uni_B1<index>::compute_slope_subdivision(const pair<r2degree>& bounds, 
+    const vec<vec<SparseMatrix<int>>>& subspaces,
+    const r2degree& cell_boundary){
     auto& X = this->d1;
     int k = X.get_num_rows();
     if(k == 1){
@@ -25,11 +137,15 @@ void Uni_B1<index>::compute_slope_subdivision(const pair<r2degree>& bounds, cons
             assert(subspace.get_num_rows() == X.get_num_rows());
             assert(subspace.get_num_cols() == num_gens);
         R2Mat submodule_pres = X.submodule_generated_by(subspace);
+        int local_dim = submodule_pres.get_num_rows();
         Uni_B1<int> res(submodule_pres);
         slope_polynomials.emplace_back( res.area_polynomial(bounds) );
+        for(auto& coeff : slope_polynomials.back()){
+            coeff /= static_cast<double>(local_dim);
         }
     }
-    return std::make_pair(scss, max_slope);
+
+    this->slope_subdivision = subdivision_from_polynomials<index>(slope_polynomials, X.row_degrees[0], bounds.second, cell_boundary);
 }
 
 
@@ -156,7 +272,7 @@ void Uni_B1<index>::compute_area_polynomial(const pair<r2degree>& bounds) {
     area_polynomial[0] += num_rows * gen_vector.first * gen_vector.second;
     area_polynomial[1] -= num_rows * gen_vector.second;
     area_polynomial[2] -= num_rows * gen_vector.first;
-    area_polynomial[3] += num_rows;
+    area_polynomial[3] += num_rows * range_area;
 
     for(const auto& degree : d1.col_degrees){
         assert( Degree_traits<r2degree>::smaller_equal(degree, bounds.second));
@@ -214,7 +330,8 @@ template<typename index>
 double Uni_B1<index>::evaluate_slope_polynomial(r2degree d) {
     double& x = d.first;
     double& y = d.second;
-    return 1/ (area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + area_polynomial[3]*x*y);
+    int k = this->d1.get_num_rows();
+    return k / (area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + area_polynomial[3]*x*y);
 }
 
 template<typename index>
