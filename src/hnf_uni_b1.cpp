@@ -37,27 +37,35 @@ struct BoundingBox {
     }
 };
 
-template<typename index>
-Point_2 dual_vertex_from_facet(Polyhedron::Facet_const_handle fit) { 
+Point_3 get_normal_of_facet(Polyhedron::Facet_const_handle fit) {
     auto he = fit->halfedge();
     Point_3 p1 = he->vertex()->point();
     Point_3 p2 = he->next()->vertex()->point();
     Point_3 p3 = he->next()->next()->vertex()->point();
-    auto normal = CGAL::cross_product(p2 - p1, p3 - p1);
-    
+    return CGAL::cross_product(p2 - p1, p3 - p1);
+}
+
+template<typename index>
+Point_2 dual_vertex_from_normal(Point_3 normal) { 
     double a = -normal.x() / normal.z();
     double b = -normal.y() / normal.z();
     return Point_2(a, b);
 }
 
+
+template<typename index>
+Point_2 dual_vertex_from_facet(Polyhedron::Facet_const_handle fit) { 
+    auto normal = get_normal_of_facet(fit);
+    return dual_vertex_from_normal<index>(normal);
+}
+
+bool is_upper_normal(Point_3 normal) {  
+    return normal.z() > 0.000001; // Maybe even increase this number
+}
+
 template<typename index>
 bool is_upper_facet(Polyhedron::Facet_const_handle fit) {  
-    auto he = fit->halfedge();
-    Point_3 p1 = he->vertex()->point();
-    Point_3 p2 = he->next()->vertex()->point();
-    Point_3 p3 = he->next()->next()->vertex()->point();
-    auto normal = CGAL::cross_product(p2 - p1, p3 - p1);
-    return normal.z() > 0;
+    return is_upper_normal(get_normal_of_facet(fit)); // Maybe even increase this number
 }
 
 template<typename index>
@@ -91,9 +99,10 @@ std::vector<Segment_2> extract_segments_from_hull(const Polyhedron& hull,
     std::vector<Segment_2> clipped_segments;
     
     for (auto fit = hull.facets_begin(); fit != hull.facets_end(); ++fit) {
-        if (!is_upper_facet<index>(fit)) continue;
+        Point_3 normal = get_normal_of_facet(fit);
+        if (is_upper_normal(normal)) continue;
         
-        Point_2 arr_vertex = dual_vertex_from_facet<index>(fit);
+        Point_2 arr_vertex = dual_vertex_from_normal(normal);
         auto he_circ = fit->halfedge();
         
         do {
@@ -103,32 +112,23 @@ std::vector<Segment_2> extract_segments_from_hull(const Polyhedron& hull,
                 he_circ = he_circ->next();
                 continue;
             }
-            
-            if (is_upper_facet<index>(opposite_facet)) {
+            Point_3 opposite_normal = get_normal_of_facet(opposite_facet);
+            if (is_upper_normal(opposite_normal)) {
                 // Edge between two lower facets
-                Point_2 arr_vertex_opp = dual_vertex_from_facet<index>(opposite_facet);
+                Point_2 arr_vertex_opp = dual_vertex_from_normal(opposite_normal);
                 if (auto seg = clip_segment_to_box<index>(arr_vertex, arr_vertex_opp, box)) {
                     clipped_segments.push_back(*seg);
                 }
             } else {
                 // Ray case
-                Point_3 edge_start = he_circ->vertex()->point();
-                Point_3 edge_end = he_circ->next()->vertex()->point();
-                K::Vector_2 edge_dir(edge_end.x() - edge_start.x(),
-                                    edge_end.y() - edge_start.y());
-                K::Vector_2 ray_dir(-edge_dir.y(), edge_dir.x());
-                
-                auto he_opp = opposite_facet->halfedge();
-                Point_3 op1 = he_opp->vertex()->point();
-                Point_3 op2 = he_opp->next()->vertex()->point();
-                Point_3 op3 = he_opp->next()->next()->vertex()->point();
-                auto normal_opp = CGAL::cross_product(op2 - op1, op3 - op1);
-                
-                if (normal_opp.z() < 0) {
-                    ray_dir = -ray_dir;
-                }
-                
-                if (auto seg = clip_ray_to_box<index>(arr_vertex, ray_dir, box)) {
+                // Ray case - edge between lower and upper facet
+                Point_3 source = he_circ->vertex()->point();
+                Point_3 target = he_circ->opposite()->vertex()->point();
+
+                Point_3 polar_edge_equation = Point_3(source.)
+                FINISH
+                // Clip ray to bounding box
+                if (auto seg = clip_ray_to_box<index>(arr_vertex, ray_direction, box)) {
                     clipped_segments.push_back(*seg);
                 }
             }
