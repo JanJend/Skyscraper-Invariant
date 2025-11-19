@@ -4,15 +4,10 @@
 #define HNF_HEADER_HPP
 
 #include "aida_interface.hpp"
+#include "hnf_uni_b1.hpp"
 #include <unistd.h>
 #include <getopt.h>
 #include <H5Cpp.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Convex_hull_3.h>
-#include <CGAL/Polyhedron_3.h>
-#include <CGAL/Arrangement_2.h>
-#include <CGAL/Arr_segment_traits_2.h>
-#include <CGAL/Arr_extended_dcel.h>
 
 
 using namespace H5;
@@ -21,74 +16,17 @@ using namespace graded_linalg;
 
 namespace hnf{
 
-using K = CGAL::Exact_predicates_inexact_constructions_kernel;
-using Point_3 = K::Point_3;
-using Point_2 = K::Point_2;
-using Segment_2 = K::Segment_2;
-using Polyhedron = CGAL::Polyhedron_3<K>;
-
-
-template<typename index>
-struct face_data{
-    SparseMatrix<int> subspace;
-    std::array<double, 4> slope_polynomial;
-    std::unique_ptr<Uni_B1<index>> quotient_ptr = std::make_unique<Uni_B1<index>>();
-};
-
-// DCEL traits for arrangement with face data
-template<typename index>
-using Dcel = CGAL::Arr_extended_dcel<Arr_segment_traits_2, 
-                                      /*vertex*/ void, 
-                                      /*halfedge*/ void, 
-                                      /*face*/ face_data<index>>;
-
-template<typename index>  
-using Arrangement = CGAL::Arrangement_2<Arr_segment_traits_2, Dcel<index>>;
-
-template<typename index>
-struct Slope_subdivision {
-    Arrangement<index> arr;
-};
-
-template<typename index>
-Arrangement<index> subdivision_from_polynomials(const vec<std::array<double,4>>& polynomials);
 
 void display_help();
 void display_version();
 void write_to_file(std::ostringstream& ostream, std::string& output_file_path, std::string& input_directory, std::string& file_without_extension, std::string& extension, std::string& output_string);
 
 
-
-template<typename index>
-struct Uni_B1{
-    R2GradedSparseMatrix<index> d1;
-    R2GradedSparseMatrix<index> d2;
-    std::array<double, 4> area_polynomial;
-    Slope_subdivision slope_subdiv;
-
-    Uni_B1() = default;
-    Uni_B1(R2GradedSparseMatrix<index>&& d1_, bool is_minimal = false);
-    Uni_B1(const R2GradedSparseMatrix<index>& d1_, bool is_minimal = false);
-
-    index dim_at(r2degree alpha) ;
-    double area() const;
-    double area(const r2degree& bound) const;
-    double area(const pair<r2degree>& bounds) const;
-    void compute_area_polynomial(const pair<r2degree>& bounds);
-    double evaluate_area_polynomial(r2degree d);
-    double evaluate_slope_polynomial(r2degree d);
-    double slope() const;
-    double slope(const r2degree& bound) const;
-    double slope(const pair<r2degree>& bounds) const;
-
-    void compute_slope_subdivision(const pair<r2degree>& bounds, const vec<vec<SparseMatrix<int>>>& subspaces, const r2degree& cell_boundary);
-};
-
 using Block = aida::Block;
 using Module_w_slope = std::pair<Uni_B1<int>, double>;
 using Block_list = aida::Block_list;
 using HN_factors = vec<Module_w_slope>;
-using R2Mat = R2GradedSparseMatrix<int>;
+
 
 struct slope_comparator{
     bool operator()(const Module_w_slope& X, const Module_w_slope& Y) const noexcept;
@@ -492,7 +430,7 @@ void process_grid_cell(
                 for(auto& sub_B : sub_B_list){
                     if (sub_B.get_num_rows() > subspaces.size()) {
                         if(restrict_dim){
-                            fill_up_grassmannian(subspaces, sub_B.get_num_rows(), 2);
+                            fill_up_grassmannians(subspaces, sub_B.get_num_rows(), 2);
                         } else {
                             fill_up_subspaces(subspaces, sub_B.get_num_rows());
                         }

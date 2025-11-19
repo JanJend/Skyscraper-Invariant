@@ -17,7 +17,8 @@ endif()
 find_package(Boost REQUIRED COMPONENTS timer chrono system)
 #Find hdf5
 find_package(HDF5 REQUIRED COMPONENTS CXX)
-
+# Find CGAL
+find_package(CGAL REQUIRED)
 
 # Set build type to Release if not specified
 if(NOT CMAKE_BUILD_TYPE)
@@ -60,17 +61,18 @@ include_directories(include)
 include_directories(${PERSISTENCE_ALGEBRA_DIR}/include)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${HDF5_INCLUDE_DIRS})
+include_directories(${CGAL_INCLUDE_DIRS})
 include_directories(${AIDA_DIR}/include)
 include_directories(${AIDA_DIR}/src)
 
 # Main HNF executable
 add_executable(hnf_main
     hnf_main.cpp
-    src/filt_landscape.cpp
-    src/file_reader.cpp
+    src/hnf.cpp
+    src/hnf_uni_b1.cpp 
 )
 
-target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} )
+target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)
 set_target_properties(hnf_main PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
 # Makes filtered landscapes from .sky files
@@ -86,9 +88,16 @@ add_executable(pres_to_quiver
     pres_to_quiver.cpp
 )
 set_target_properties(pres_to_quiver PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-
 target_link_libraries(filt_landscape_from_sky ${Boost_LIBRARIES})
 
-install(TARGETS hnf_main filt_landscape_from_sky pres_to_quiver
+# Make the arrangement test
+add_executable(arrangement_test
+    tests/arrangement_test.cpp
+    src/hnf_uni_b1.cpp
+)
+target_link_libraries(arrangement_test ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)
+set_target_properties(arrangement_test PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+
+install(TARGETS hnf_main filt_landscape_from_sky pres_to_quiver arrangement_test
     RUNTIME DESTINATION bin
 )
