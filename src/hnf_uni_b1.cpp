@@ -2,14 +2,7 @@
 
 namespace hnf {
 
-using R2Mat = R2GradedSparseMatrix<int>;
-
-struct r3_point_w_number{
-    std::array<double, 3> point;
-    int number;
-};
-
-std::vector<Point_3> dual_points_polys(const vec<std::array<double,4>>& polynomials){
+std::vector<Point_3> dual_points_polys(const vec<std::array<double,3>>& polynomials){
     vec<Point_3> dual_points; 
     for (size_t i = 0; i < polynomials.size(); i++) {
         auto& poly = polynomials[i];
@@ -22,57 +15,174 @@ std::vector<Point_3> dual_points_polys(const vec<std::array<double,4>>& polynomi
 }
 
 template<typename index>
-Arrangement<index> subdivision_from_polynomials(const vec<std::array<double,4>>& polynomials,
-    const r2degree& cell_start, const r2degree& cell_end) {
+struct BoundingBox {
+    double x_min, x_max, y_min, y_max;
     
-    double x_min = cell_start.first, x_max = cell_end.first;
-    double y_min = cell_start.second, y_max = cell_end.second;
+    bool contains(const Point_2& p) const {
+        return p.x() >= x_min && p.x() <= x_max &&
+               p.y() >= y_min && p.y() <= y_max;
+    }
+    
+    K::Iso_rectangle_2 to_cgal_rect() const {
+        return K::Iso_rectangle_2(Point_2(x_min, y_min), Point_2(x_max, y_max));
+    }
+    
+    std::vector<Segment_2> boundary_segments() const {
+        return {
+            Segment_2(Point_2(x_min, y_min), Point_2(x_max, y_min)),
+            Segment_2(Point_2(x_max, y_min), Point_2(x_max, y_max)),
+            Segment_2(Point_2(x_max, y_max), Point_2(x_min, y_max)),
+            Segment_2(Point_2(x_min, y_max), Point_2(x_min, y_min))
+        };
+    }
+};
 
-    // Helper to check if point is in box
-    auto in_box = [&](const Point_2& p) {
-        return p.x() >= x_min && p.x() <= x_max && 
-            p.y() >= y_min && p.y() <= y_max;
-    };
-    // Helper to clip segment to box
-    auto clip_segment = [&](const Point_2& p1, const Point_2& p2) 
-        -> std::optional<Segment_2> {
-        // Cohen-Sutherland or simpler: use CGAL's intersection
-        K::Iso_rectangle_2 box(Point_2(x_min, y_min), Point_2(x_max, y_max));
-        auto result = CGAL::intersection(Segment_2(p1, p2), box);
-        
-        if (result) {
-            if (const Segment_2* seg = boost::get<Segment_2>(&*result)) {
-                return *seg;
-            } else if (const Point_2* pt = boost::get<Point_2>(&*result)) {
-                // Degenerate case: segment touches box at single point
-                return std::nullopt;
-            }
+template<typename index>
+Point_2 dual_vertex_from_facet(Polyhedron::Facet_const_handle fit) { 
+    auto he = fit->halfedge();
+    Point_3 p1 = he->vertex()->point();
+    Point_3 p2 = he->next()->vertex()->point();
+    Point_3 p3 = he->next()->next()->vertex()->point();
+    auto normal = CGAL::cross_product(p2 - p1, p3 - p1);
+    
+    double a = -normal.x() / normal.z();
+    double b = -normal.y() / normal.z();
+    return Point_2(a, b);
+}
+
+template<typename index>
+bool is_upper_facet(Polyhedron::Facet_const_handle fit) {  
+    auto he = fit->halfedge();
+    Point_3 p1 = he->vertex()->point();
+    Point_3 p2 = he->next()->vertex()->point();
+    Point_3 p3 = he->next()->next()->vertex()->point();
+    auto normal = CGAL::cross_product(p2 - p1, p3 - p1);
+    return normal.z() > 0;
+}
+
+template<typename index>
+std::optional<Segment_2> clip_segment_to_box(const Point_2& p1, const Point_2& p2, 
+                                               const BoundingBox<index>& box) {
+    auto result = CGAL::intersection(Segment_2(p1, p2), box.to_cgal_rect());
+    if (result) {
+        if (const Segment_2* seg = boost::get<Segment_2>(&*result)) {
+            return *seg;
         }
-        return std::nullopt;
-    };
+    }
+    return std::nullopt;
+}
 
-    // Helper to clip ray to box
-    auto clip_ray = [&](const Point_2& source, const K::Vector_2& dir) 
-        -> std::optional<Segment_2> {
-        // Find intersection of ray with box
-        K::Ray_2 ray(source, dir);
-        K::Iso_rectangle_2 box(Point_2(x_min, y_min), Point_2(x_max, y_max));
-        auto result = CGAL::intersection(ray, box);
-        
-        if (result) {
-            if (const Segment_2* seg = boost::get<Segment_2>(&*result)) {
-                return *seg;
-            } else if (const Point_2* pt = boost::get<Point_2>(&*result)) {
-                // Ray starts at boundary
-                return std::nullopt;
-            }
+template<typename index>
+std::optional<Segment_2> clip_ray_to_box(const Point_2& source, const K::Vector_2& dir,
+                                          const BoundingBox<index>& box) {
+    K::Ray_2 ray(source, dir);
+    auto result = CGAL::intersection(ray, box.to_cgal_rect());
+    if (result) {
+        if (const Segment_2* seg = boost::get<Segment_2>(&*result)) {
+            return *seg;
         }
-        return std::nullopt;
-    };
+    }
+    return std::nullopt;
+}
 
+template<typename index>
+std::vector<Segment_2> extract_segments_from_hull(const Polyhedron& hull, 
+                                                    const BoundingBox<index>& box) {
+    std::vector<Segment_2> clipped_segments;
+    
+    for (auto fit = hull.facets_begin(); fit != hull.facets_end(); ++fit) {
+        if (!is_upper_facet<index>(fit)) continue;
+        
+        Point_2 arr_vertex = dual_vertex_from_facet<index>(fit);
+        auto he_circ = fit->halfedge();
+        
+        do {
+            auto opposite_facet = he_circ->opposite()->facet();
+            if (opposite_facet == Polyhedron::Facet_handle()) {
+                std::cerr << "Warning: Facet has no opposite facet." << std::endl;
+                he_circ = he_circ->next();
+                continue;
+            }
+            
+            if (is_upper_facet<index>(opposite_facet)) {
+                // Edge between two lower facets
+                Point_2 arr_vertex_opp = dual_vertex_from_facet<index>(opposite_facet);
+                if (auto seg = clip_segment_to_box<index>(arr_vertex, arr_vertex_opp, box)) {
+                    clipped_segments.push_back(*seg);
+                }
+            } else {
+                // Ray case
+                Point_3 edge_start = he_circ->vertex()->point();
+                Point_3 edge_end = he_circ->next()->vertex()->point();
+                K::Vector_2 edge_dir(edge_end.x() - edge_start.x(),
+                                    edge_end.y() - edge_start.y());
+                K::Vector_2 ray_dir(-edge_dir.y(), edge_dir.x());
+                
+                auto he_opp = opposite_facet->halfedge();
+                Point_3 op1 = he_opp->vertex()->point();
+                Point_3 op2 = he_opp->next()->vertex()->point();
+                Point_3 op3 = he_opp->next()->next()->vertex()->point();
+                auto normal_opp = CGAL::cross_product(op2 - op1, op3 - op1);
+                
+                if (normal_opp.z() < 0) {
+                    ray_dir = -ray_dir;
+                }
+                
+                if (auto seg = clip_ray_to_box<index>(arr_vertex, ray_dir, box)) {
+                    clipped_segments.push_back(*seg);
+                }
+            }
+            he_circ = he_circ->next();
+        } while (he_circ != fit->halfedge());
+    }
+    
+    return clipped_segments;
+}
 
+template<typename index>
+void assign_face_data(Arrangement<index>& arr, const Polyhedron& hull,
+                     const std::vector<std::array<double,3>>& polynomials,
+                     const std::map<Point_3, size_t>& point_to_index) {
+    CGAL::Arr_naive_point_location<Arrangement<index>> pl(arr);
+    
+    for (auto vit = hull.vertices_begin(); vit != hull.vertices_end(); ++vit) {
+        Point_3 hull_vertex = vit->point();
+        
+        // Check if this vertex is on the lower hull
+        bool is_lower = false;
+        auto he_circ = vit->halfedge();
+        do {
+            if (he_circ->facet() != Polyhedron::Facet_handle() && 
+                is_upper_facet<index>(he_circ->facet())) {
+                is_lower = true;
+                break;
+            }
+            he_circ = he_circ->next()->opposite();
+        } while (he_circ != vit->halfedge());
+        
+        if (!is_lower) continue;
+        
+        Point_2 query(hull_vertex.x(), hull_vertex.y());
+        auto obj = pl.locate(query);
+        
+        typename Arrangement<index>::Face_handle fh;
+        if (CGAL::assign(fh, obj) && !fh->is_unbounded()) {
+            size_t orig_idx = point_to_index.at(hull_vertex);
+            fh->data().subspace_index = orig_idx;
+            fh->data().slope_polynomial = polynomials[orig_idx];
+        }
+    }
+}
+
+template<typename index>
+Arrangement<index> subdivision_from_polynomials(const vec<std::array<double,3>>& polynomials,
+                                                 const r2degree& cell_start, 
+                                                 const r2degree& cell_end) {
+    BoundingBox<index> box{cell_start.first, cell_end.first, 
+                           cell_start.second, cell_end.second};
+    
+    // Build convex hull in dual space
     std::vector<Point_3> dual_points = dual_points_polys(polynomials);
-  
     std::map<Point_3, size_t> point_to_index;
     for (size_t i = 0; i < dual_points.size(); ++i) {
         point_to_index[dual_points[i]] = i;
@@ -80,128 +190,26 @@ Arrangement<index> subdivision_from_polynomials(const vec<std::array<double,4>>&
     
     Polyhedron hull;
     CGAL::convex_hull_3(dual_points.begin(), dual_points.end(), hull);
-
-    std::vector<Segment_2> clipped_segments;
     
-    for (auto fit = hull.facets_begin(); fit != hull.facets_end(); ++fit) {
-        auto he = fit->halfedge();
-        Point_3 p1 = he->vertex()->point();
-        Point_3 p2 = he->next()->vertex()->point();
-        Point_3 p3 = he->next()->next()->vertex()->point();
-        
-        auto normal = CGAL::cross_product(p2 - p1, p3 - p1);
-        
-        if (normal.z() < 0) {
-            double a = -normal.x() / normal.z();
-            double b = -normal.y() / normal.z();
-            double c = p1.z() - a * p1.x() - b * p1.y();
-            
-            Point_2 arr_vertex(a, b);
-            
-            // Only process if vertex is in or near the box
-
-                
-            auto he_circ = fit->halfedge();
-            do {
-                auto opposite_facet = he_circ->opposite()->facet();
-                
-                if (opposite_facet != Polyhedron::Facet_handle()) {
-                    auto he_opp = opposite_facet->halfedge();
-                    Point_3 op1 = he_opp->vertex()->point();
-                    Point_3 op2 = he_opp->next()->vertex()->point();
-                    Point_3 op3 = he_opp->next()->next()->vertex()->point();
-                    auto normal_opp = CGAL::cross_product(op2 - op1, op3 - op1);
-                    
-                    if (normal_opp.z() < 0) {
-                        double a_opp = -normal_opp.x() / normal_opp.z();
-                        double b_opp = -normal_opp.y() / normal_opp.z();
-                        Point_2 arr_vertex_opp(a_opp, b_opp);
-                        
-                        // Clip segment to box
-                        if (auto seg = clip_segment(arr_vertex, arr_vertex_opp)) {
-                            clipped_segments.push_back(*seg);
-                        }
-                    } else {
-                        // Ray case
-                        Point_3 edge_start = he_circ->vertex()->point();
-                        Point_3 edge_end = he_circ->next()->vertex()->point();
-                        K::Vector_2 edge_dir(edge_end.x() - edge_start.x(), 
-                                            edge_end.y() - edge_start.y());
-                        K::Vector_2 ray_dir(-edge_dir.y(), edge_dir.x());
-                        
-                        if (normal_opp.z() > 0) {
-                            ray_dir = -ray_dir;
-                        }
-                        
-                        // Clip ray to box
-                        if (auto seg = clip_ray(arr_vertex, ray_dir)) {
-                            clipped_segments.push_back(*seg);
-                        }
-                    }
-                } else {
-                    std::cerr << "Warning: Facet has no opposite facet." << std::endl;
-                }
-                he_circ = he_circ->next();
-            } while (he_circ != fit->halfedge());
-            
-        }
-    }
-    
+    // Extract and clip segments from hull
+    std::vector<Segment_2> clipped_segments = extract_segments_from_hull<index>(hull, box);
     
     // Build arrangement with bounding box
     Arrangement<index> arr;
-    std::vector<Segment_2> bbox_segments = {
-        Segment_2(Point_2(x_min, y_min), Point_2(x_max, y_min)),
-        Segment_2(Point_2(x_max, y_min), Point_2(x_max, y_max)),
-        Segment_2(Point_2(x_max, y_max), Point_2(x_min, y_max)),
-        Segment_2(Point_2(x_min, y_max), Point_2(x_min, y_min))
-    };
+    auto bbox_segments = box.boundary_segments();
     CGAL::insert(arr, bbox_segments.begin(), bbox_segments.end());
     CGAL::insert(arr, clipped_segments.begin(), clipped_segments.end());
     
-    // Assign face data: each face corresponds to a vertex on the lower hull
-    for (auto vit = hull.vertices_begin(); vit != hull.vertices_end(); ++vit) {
-        Point_3 hull_vertex = vit->point();
-        
-        // Check if this vertex is on the lower hull (has at least one incident lower facet)
-        bool is_lower = false;
-        auto he_circ = vit->halfedge();
-        do {
-            if (he_circ->facet() != Polyhedron::Facet_handle()) {
-                auto he = he_circ->facet()->halfedge();
-                Point_3 p1 = he->vertex()->point();
-                Point_3 p2 = he->next()->vertex()->point();
-                Point_3 p3 = he->next()->next()->vertex()->point();
-                auto normal = CGAL::cross_product(p2 - p1, p3 - p1);
-                if (normal.z() < 0) {
-                    is_lower = true;
-                    break;
-                }
-            }
-            he_circ = he_circ->next()->opposite();
-        } while (he_circ != vit->halfedge());
-        
-        if (is_lower) {
-            // Find the face in the arrangement containing point (hull_vertex.x(), hull_vertex.y())
-            Point_2 query(hull_vertex.x(), hull_vertex.y());
-            // Use a point location strategy
-            CGAL::Arr_naive_point_location<Arrangement<index>> pl(arr);
-            auto obj = pl.locate(query);
-            
-            if (auto* f = boost::get<Arrangement<index>::Face_handle>(&obj)) {
-                // Get original index
-                size_t orig_idx = point_to_index[hull_vertex];
-                
-                // Set face data
-                (*f)->data().subspace_index = orig_idx;
-                (*f)->data().slope_polynomial = polynomials[orig_idx];
-                // Set other face_data fields as needed
-            }
-        }
-    }
+    // Assign face data
+    assign_face_data(arr, hull, polynomials, point_to_index);
     
     return arr;
 }
+
+template<typename index>
+void Uni_B1<index>::compute_arrangement_quotients(vec<SparseMatrix<index>> subspaces){
+    //TO-DO implement
+};
 
 template<typename index>
 void Uni_B1<index>::compute_slope_subdivision(const pair<r2degree>& bounds, 
@@ -213,13 +221,15 @@ void Uni_B1<index>::compute_slope_subdivision(const pair<r2degree>& bounds,
         std::cout << "Tried to compute slope subdivision for a module of dimension 1. Nothing to do." << std::endl;
         return;
     }
-    vec<std::array<double, 4>> slope_polynomials;
+    vec<std::array<double, 3>> slope_polynomials;
     if(subspaces.size() < k){
             std::cerr << "Have not loaded enough subspaces" << std::endl;
             std::exit(1);
     }
 
-    for(auto ungraded_subspace : subspaces[k-1]){
+    for(size_t i = 1; i < subspaces[k-1].size(); i++){
+        //skip i = 0, because it is the empty space
+        auto ungraded_subspace = subspaces[k-1][i];
         int num_gens = ungraded_subspace.get_num_cols();
         R2Mat subspace = R2Mat(ungraded_subspace);
         subspace.row_degrees = X.row_degrees;
@@ -227,15 +237,20 @@ void Uni_B1<index>::compute_slope_subdivision(const pair<r2degree>& bounds,
             assert(subspace.get_num_rows() == X.get_num_rows());
             assert(subspace.get_num_cols() == num_gens);
         R2Mat submodule_pres = X.submodule_generated_by(subspace);
-        int local_dim = submodule_pres.get_num_rows();
+        X.column_reduction_graded(); //full minimisation should not be necessary
         Uni_B1<int> res(submodule_pres);
-        slope_polynomials.emplace_back( res.area_polynomial(bounds) );
+        res.compute_area_polynomial(bounds);  // Compute first
+        slope_polynomials.emplace_back(res.area_polynomial);
         for(auto& coeff : slope_polynomials.back()){
-            coeff /= static_cast<double>(local_dim);
+            coeff /= static_cast<double>(num_gens);
         }
     }
 
-    this->slope_subdivision = subdivision_from_polynomials<index>(slope_polynomials, X.row_degrees[0], X.row_degrees[0], cell_boundary);
+    this->slope_subdiv = std::make_unique<Slope_subdivision<index>>(
+        subdivision_from_polynomials<index>(slope_polynomials, X.row_degrees[0], cell_boundary)
+    );
+
+    this->compute_arrangement_quotients(subspaces[k-1]);
 }
 
 
@@ -362,7 +377,6 @@ void Uni_B1<index>::compute_area_polynomial(const pair<r2degree>& bounds) {
     area_polynomial[0] += num_rows * gen_vector.first * gen_vector.second;
     area_polynomial[1] -= num_rows * gen_vector.second;
     area_polynomial[2] -= num_rows * gen_vector.first;
-    area_polynomial[3] += num_rows * range_area;
 
     for(const auto& degree : d1.col_degrees){
         assert( Degree_traits<r2degree>::smaller_equal(degree, bounds.second));
@@ -404,7 +418,7 @@ void Uni_B1<index>::compute_area_polynomial(const pair<r2degree>& bounds) {
         r2degree rel_vector = bounds.second - degree;
         area_polynomial[0] += rel_vector.first* rel_vector.second;
     }
-    for(index i = 0; i < 4; i++){
+    for(index i = 0; i < 3; i++){
         area_polynomial[i] /= range_area;
     }
 }
@@ -413,7 +427,7 @@ template<typename index>
 double Uni_B1<index>::evaluate_area_polynomial(r2degree d) {
     double& x = d.first;
     double& y = d.second;
-    return area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + area_polynomial[3]*x*y;
+    return area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y;
 }
 
 template<typename index>
@@ -421,7 +435,7 @@ double Uni_B1<index>::evaluate_slope_polynomial(r2degree d) {
     double& x = d.first;
     double& y = d.second;
     int k = this->d1.get_num_rows();
-    return k / (area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + area_polynomial[3]*x*y);
+    return k / (area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y);
 }
 
 template<typename index>
@@ -454,5 +468,9 @@ double Uni_B1<index>::slope(const pair<r2degree>& bounds) const {
     return slope_value;
 }
 
+// Explicit template instantiation for int
+template class hnf::Uni_B1<int>;
+template hnf::Arrangement<int> hnf::subdivision_from_polynomials(
+    const vec<std::array<double,3>>&, const r2degree&, const r2degree&);
 
 } // namespace hnf

@@ -67,19 +67,21 @@ include_directories(${AIDA_DIR}/src)
 
 # Main HNF executable
 add_executable(hnf_main
-    hnf_main.cpp
     src/hnf.cpp
     src/hnf_uni_b1.cpp 
+    hnf_main.cpp
 )
 
-target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)
+target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_TIMER_LIBRARY}
+    ${Boost_CHRONO_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY} ${HDF5_LIBRARIES} CGAL::CGAL)
 set_target_properties(hnf_main PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
 # Makes filtered landscapes from .sky files
 add_executable(filt_landscape_from_sky
-    filt_landscape_from_sky.cpp
     src/filt_landscape.cpp
     src/file_reader.cpp
+    filt_landscape_from_sky.cpp
 )
 set_target_properties(filt_landscape_from_sky PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
@@ -92,8 +94,8 @@ target_link_libraries(filt_landscape_from_sky ${Boost_LIBRARIES})
 
 # Make the arrangement test
 add_executable(arrangement_test
-    tests/arrangement_test.cpp
     src/hnf_uni_b1.cpp
+    arrangement_test.cpp
 )
 target_link_libraries(arrangement_test ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)
 set_target_properties(arrangement_test PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")

@@ -470,7 +470,7 @@ void process_grid_cell(
                             shifted_summand.d1.print_graded();
                             std::cout << "  area polynomial: " << 
                                 shifted_summand.area_polynomial[0] << "  " << shifted_summand.area_polynomial[1] << "  " << 
-                                shifted_summand.area_polynomial[2] << "  " << shifted_summand.area_polynomial[3] << std::endl;
+                                shifted_summand.area_polynomial[2]  << std::endl;
                             std::cout << "  Verschiebung: " << verschiebung << std::endl;
                             std::cout << "  Slope bounds: " << slope_bounds.first << " " << slope_bounds.second << std::endl;
                             auto normalisation = slope_bounds.second - slope_bounds.first;

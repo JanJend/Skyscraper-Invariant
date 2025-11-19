@@ -1,0 +1,10 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0.350481 -0.529039 0.319022 0.359468'>
+<line x1='0.377066' y1='-0.199527' x2='0.377066' y2='-0.499084' stroke='black' stroke-width='0.5'/>
+<line x1='0.377066' y1='-0.499084' x2='0.642918' y2='-0.499084' stroke='black' stroke-width='0.5'/>
+<line x1='0.642918' y1='-0.499084' x2='0.642918' y2='-0.199527' stroke='black' stroke-width='0.5'/>
+<line x1='0.642918' y1='-0.199527' x2='0.377066' y2='-0.199527' stroke='black' stroke-width='0.5'/>
+<circle cx='0.377066' cy='-0.499084' r='1' fill='red'/>
+<circle cx='0.377066' cy='-0.199527' r='1' fill='red'/>
+<circle cx='0.642918' cy='-0.499084' r='1' fill='red'/>
+<circle cx='0.642918' cy='-0.199527' r='1' fill='red'/>
+</svg>

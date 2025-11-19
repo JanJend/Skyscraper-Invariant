@@ -1,6 +1,4 @@
 #include "hnf_interface.hpp"
-#include "src/hnf.cpp"
-
 
 namespace fs = std::filesystem;
 
