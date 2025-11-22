@@ -17,13 +17,28 @@ void get_arrangement(std::filesystem::path& input_path,
 
     R2GradedSparseMatrix<int> M(input_path.string());
     int k = M.get_num_rows();
-    Uni_B1<int> M_res(M);
-    auto bounding_box = M_res.d1.bounding_box();
-    r2degree cell_boundary = bounding_box.second;
-    // Notice that right now, this is the whole support, and not just the grid cell.
-    auto supspaces = all_sparse_subspaces(k);
-    M_res.compute_slope_subdivision(bounding_box, supspaces, cell_boundary);
-    M_res.slope_subdiv->export_to_svg(output_path.string());
+    auto perm = M.compute_grid_representation();
+    pair<r2degree> bounding_box = M.bounding_box();
+
+    // enlarging bounding box to see whole arrangement
+    
+
+    assert(M.x_grid.size() >= 2 && M.y_grid.size() >= 2);
+    double cell_end_x = M.x_grid[1];
+    double cell_end_y = M.y_grid[1];
+    r2degree cell_start = {M.x_grid[0], M.y_grid[0]};
+    r2degree cell_boundary = {cell_end_x, cell_end_y};
+    cell_boundary = bounding_box.second;
+    r2degree range = bounding_box.second - bounding_box.first;
+    cell_start = cell_start - 0.2*range;
+    // cell_start = {-2, -2};
+    // cell_boundary = {2, 2};
+    std::cout << "Computing arrangement in the box: (" << cell_start.first << ", " << cell_start.second 
+        << ") to (" << cell_boundary.first << ", " << cell_boundary.second << ")\n";
+    Uni_B1 M_res(M);
+    auto subspaces = all_sparse_subspaces(k);
+    M_res.compute_slope_subdivision(bounding_box, subspaces, cell_start, cell_boundary);
+    M_res.slope_subdiv->export_to_svg(output_path.string(), bounding_box.first.first, bounding_box.first.second);
 }
 
 int main(int argc, char** argv) {
@@ -55,7 +70,6 @@ int main(int argc, char** argv) {
     suffix = "_" + std::to_string(optional_value);
     std::string modified_path = insert_suffix_before_extension(filepath, suffix, extension);
     output_path = std::filesystem::path(modified_path);
-    
     
     get_arrangement(input_path, output_path, optional_value);
 

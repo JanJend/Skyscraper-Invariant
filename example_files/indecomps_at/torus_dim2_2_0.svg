@@ -1,0 +1,15 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0.59286 0.473388 0.177332 0.153787'>
+<g transform='scale(1, -1)'>
+<polygon points='0.755414,-0.473388 0.607638,-0.473388 0.607638,-0.601544 0.755414,-0.601544 ' fill='#FF6B6B' fill-opacity='0.3' stroke='none'/>
+<line x1='0.59286' y1='0' x2='0.770192' y2='0' stroke='gray' stroke-width='0.000177332' stroke-dasharray='0.00177332'/>
+<line x1='0' y1='-0.61436' x2='0' y2='-0.460572' stroke='gray' stroke-width='0.000177332' stroke-dasharray='0.00177332'/>
+<line x1='0.607638' y1='-0.601544' x2='0.607638' y2='-0.473388' stroke='black' stroke-width='0.000354664'/>
+<line x1='0.607638' y1='-0.601544' x2='0.755414' y2='-0.601544' stroke='black' stroke-width='0.000354664'/>
+<line x1='0.755414' y1='-0.601544' x2='0.755414' y2='-0.473388' stroke='black' stroke-width='0.000354664'/>
+<line x1='0.607638' y1='-0.473388' x2='0.755414' y2='-0.473388' stroke='black' stroke-width='0.000354664'/>
+<circle cx='0.607638' cy='-0.601544' r='0.000531995' fill='black'/>
+<circle cx='0.607638' cy='-0.473388' r='0.000531995' fill='black'/>
+<circle cx='0.755414' cy='-0.601544' r='0.000531995' fill='black'/>
+<circle cx='0.755414' cy='-0.473388' r='0.000531995' fill='black'/>
+</g>
+</svg>

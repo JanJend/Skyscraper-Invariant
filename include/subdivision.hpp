@@ -1,9 +1,9 @@
 #pragma once
 
-#ifndef HNF_UNI_B1_HPP
-#define HNF_UNI_B1_HPP
+#ifndef SUBDIVISION_HPP
+#define SUBDIVISION_HPP
 
-#include "grlina/graded_linalg.hpp"
+#include "uni_b1.hpp"
 #include <unistd.h>
 #include <getopt.h>
 #include <iomanip> 
@@ -23,68 +23,7 @@ using namespace graded_linalg;
 
 namespace hnf{
 
-using R2Mat = R2GradedSparseMatrix<int>;
-
-// Forward declarations
-
-struct Uni_B1;
 struct Slope_subdivision;
-
-struct Uni_B1{
-    R2Mat d1;
-    R2Mat d2;
-    std::array<double, 3> area_polynomial;
-    std::unique_ptr<Slope_subdivision> slope_subdiv;  
-
-    void compute_arrangement_quotients(vec<SparseMatrix<int>> subspaces);
-
-    Uni_B1() = default;
-    Uni_B1(R2Mat&& d1_, bool is_minimal = false);
-    Uni_B1(const R2Mat& d1_, bool is_minimal = false);
-
-    // Copy constructor
-    Uni_B1(const Uni_B1& other) 
-        : d1(other.d1), d2(other.d2), area_polynomial(other.area_polynomial) {
-        if (other.slope_subdiv) {
-            slope_subdiv = std::make_unique<Slope_subdivision>(*other.slope_subdiv);
-        }
-    }
-    
-    // Move constructor
-    Uni_B1(Uni_B1&& other) = default;
-    
-    // Copy assignment
-    Uni_B1& operator=(const Uni_B1& other) {
-        if (this != &other) {
-            d1 = other.d1;
-            d2 = other.d2;
-            area_polynomial = other.area_polynomial;
-            if (other.slope_subdiv) {
-                slope_subdiv = std::make_unique<Slope_subdivision>(*other.slope_subdiv);
-            } else {
-                slope_subdiv.reset();
-            }
-        }
-        return *this;
-    }
-    
-    // Move assignment
-    Uni_B1& operator=(Uni_B1&& other) = default;
-
-    int dim_at(r2degree alpha) ;
-    double area() const;
-    double area(const r2degree& bound) const;
-    double area(const pair<r2degree>& bounds) const;
-    void compute_area_polynomial(const pair<r2degree>& bounds);
-    double evaluate_area_polynomial(r2degree d);
-    double evaluate_slope_polynomial(r2degree d);
-    double slope() const;
-    double slope(const r2degree& bound) const;
-    double slope(const pair<r2degree>& bounds) const;
-
-    void compute_slope_subdivision(const pair<r2degree>& bounds, const vec<vec<SparseMatrix<int>>>& subspaces, const r2degree& cell_start, const r2degree& cell_boundary);
-};
-
 
 using K = CGAL::Exact_predicates_exact_constructions_kernel;
 using Point_3 = K::Point_3; // 3d point
@@ -145,7 +84,6 @@ struct face_data{
 using Traits = CGAL::Arr_segment_traits_2<K>;
 
 
-
 using Arrangement = CGAL::Arrangement_2<
     CGAL::Arr_segment_traits_2<K>,
     CGAL::Arr_extended_dcel<
@@ -155,7 +93,6 @@ using Arrangement = CGAL::Arrangement_2<
         face_data
     >
 >;
-
 
 struct Slope_subdivision {
     Arrangement arr;
@@ -332,4 +269,4 @@ Arrangement subdivision_from_polynomials(const vec<std::array<double,3>>& polyno
 
 } // namespace hnf
 
-#endif // HNF_UNI_B1_HPP
+#endif // subdivision.hpp

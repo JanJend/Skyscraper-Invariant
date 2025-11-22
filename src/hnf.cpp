@@ -2,110 +2,6 @@
 
 namespace hnf {
 
-// slope_comparator
-bool slope_comparator::operator()(const Module_w_slope& X, const Module_w_slope& Y) const noexcept {
-    return X.second > Y.second;
-}
-
-// Free functions (non-template)
-Module_w_slope find_scss_bruteforce(const R2Mat& X,
-        vec<vec<SparseMatrix<int>>>& subspaces,
-        R2Mat& max_subspace,
-        const pair<r2degree>& bounds) {
-    int k = X.get_num_rows();
-    Uni_B1<int> scss = Uni_B1<int>(X);
-    double max_slope = scss.slope(bounds);
-    if(k == 1){
-        // Nothing to do?
-    } else {
-        assert(k < 6);
-        if(subspaces.size() < k){
-            std::cerr << "Have not loaded enough subspaces" << std::endl;
-            std::exit(1);
-        }
-        for(auto ungraded_subspace : subspaces[k-1]){
-            int num_gens = ungraded_subspace.get_num_cols();
-            R2Mat subspace = R2Mat(ungraded_subspace);
-            subspace.row_degrees = X.row_degrees;
-            subspace.col_degrees = vec<r2degree>(num_gens, X.row_degrees[0]);
-            assert(subspace.get_num_rows() == X.get_num_rows());
-            assert(subspace.get_num_cols() == num_gens);
-            R2Mat submodule_pres = X.submodule_generated_by(subspace);
-            Uni_B1<int> res(submodule_pres);
-            double slope = res.slope(bounds);
-            if(slope > max_slope){
-                max_slope = slope;
-                scss = std::move(res);
-                max_subspace = subspace;
-            }
-        }
-    }
-    return std::make_pair(scss, max_slope);
-}
-
-HN_factors skyscraper_invariant(Block_list& summands,
-        vec<vec<SparseMatrix<int>>>& subspaces,
-        const pair<r2degree>& bounds) {
-    HN_factors result;
-    for(Block X : summands){
-        if(X.get_num_rows() >= 4){
-            std::cout << "  Warning: Computing HNF for a module of dimension "
-                << X.get_num_rows() << std::endl;
-        }
-
-        while(X.get_num_rows() > 1){
-            R2Mat max_subspace;
-            result.emplace_back(find_scss_bruteforce(X, subspaces, max_subspace, bounds));
-            if(result.back().first.d1.get_num_rows() == X.get_num_rows()){
-                break;
-            } else {
-                X.quotient_by(max_subspace);
-            }
-        }
-        if(X.get_num_rows() == 1){
-            Uni_B1<int> res(X);
-            double slope = res.slope(bounds);
-            result.emplace_back(std::make_pair(res, slope));
-        } else if (X.get_num_rows() == 0){
-            // Nothing to do.
-        }
-    }
-    return result;
-}
-
-void skyscraper_invariant(const R2Mat& input,
-    HN_factors& result,
-    vec<vec<SparseMatrix<int>>>& subspaces,
-    const pair<r2degree>& bounds) {
-    
-    R2Mat X = input;
-
-    if(X.get_num_rows() > 1){
-        
-       // X.to_stream_r2(std::cout);
-    }
-
-    if(X.get_num_rows() >= 6){
-        std::cout << "  Warning: Computing HNF for a module of dimension "
-            << X.get_num_rows() << std::endl;
-    }
-    while(X.get_num_rows() > 1){
-        R2Mat subspace;
-        result.emplace_back(find_scss_bruteforce(X, subspaces, subspace, bounds));
-        if(result.back().first.d1.get_num_rows() == X.get_num_rows()){
-            break;
-        } else {
-            X.quotient_by(subspace);
-        }
-    }
-    if(X.get_num_rows() == 1){
-        Uni_B1<int> res(X);
-        double slope = res.slope(bounds);
-        result.emplace_back(std::make_pair(res, slope));
-    } else if (X.get_num_rows() == 0){
-        // Nothing to do.
-    }
-}
 
 void calculate_stats(const std::vector<int>& all_dimensions) {
     if (all_dimensions.empty()) {
@@ -124,7 +20,12 @@ void calculate_stats(const std::vector<int>& all_dimensions) {
     }
     double variance = squared_diff_sum / all_dimensions.size();
     double standard_deviation = std::sqrt(variance);
+    int count_not_one = std::count_if(all_dimensions.begin(), all_dimensions.end(), 
+                                   [](int val) { return val != 1; });
+    double percentage_not_one = (static_cast<double>(count_not_one) / all_dimensions.size()) * 100.0;
 
+    std::cout << std::fixed << std::setprecision(8);
+    std::cout << "Percentage not 1: " << percentage_not_one << "%" << std::endl;
     std::cout << "Maximum: " << max_value << std::endl;
     std::cout << "Average: " << average << std::endl;
     std::cout << "Standard Deviation: " << standard_deviation << std::endl;
@@ -241,26 +142,38 @@ void compare_slopes_test(r2degree current_grid_degree,
 
 // Dynamic_HNF
 Dynamic_HNF::Dynamic_HNF() {
-    indecomposable_summands = vec<vec<Uni_B1<int>>>();
+    indecomposable_summands = vec<vec<Uni_B1>>();
     grid_ind_dimensions = vec<int>();
 }
 
 void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
-        R2Mat& M, int& y_index, pair<r2degree> slope_bounds) {
+        R2Mat& M, int& y_index, pair<r2degree> slope_bounds,
+        const vec<vec<SparseMatrix<int>>>& subspaces) {
     assert(y_index > -1);
     double y_coordinate = M.y_grid[y_index];
     int x_length = M.x_grid.size();
-
-    indecomposable_summands = vec<vec<Uni_B1<int>>>(x_length, vec<Uni_B1<int>>());
+    double y_next;
+    if(y_index < M.y_grid.size()-1){
+        y_next = M.y_grid[y_index+1];
+    } else {
+        y_next = slope_bounds.second.second;
+    }
+    indecomposable_summands = vec<vec<Uni_B1>>(x_length, vec<Uni_B1>());
     int max_dim = 0;
 
     for(int x_index = 0; x_index < x_length; x_index++){
         r2degree grid_point = {M.x_grid[x_index], y_coordinate};
+        double next_x;
+        if(x_index < M.x_grid.size()-1){
+            next_x = M.x_grid[x_index+1];
+        } else {
+            next_x = slope_bounds.second.first;
+        }
         auto M_induced = M.submodule_generated_at(grid_point);
         if(M_induced.get_num_rows() == 0){
             // Nothing to do?
         } else if (M_induced.get_num_rows() == 1){
-            Uni_B1<int> res(std::move(M_induced));
+            Uni_B1 res(std::move(M_induced));
             indecomposable_summands[x_index].push_back(res);
             indecomposable_summands[x_index].back().compute_area_polynomial(slope_bounds);
             grid_ind_dimensions.push_back(1);
@@ -272,13 +185,25 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
                 if(sub_M.get_num_rows() > max_dim){
                     max_dim = sub_M.get_num_rows();
                 }
-                indecomposable_summands[x_index].emplace_back(Uni_B1<int>(std::move(sub_M)));
-                indecomposable_summands[x_index].back().compute_area_polynomial(slope_bounds);
+                indecomposable_summands[x_index].emplace_back(Uni_B1(std::move(sub_M)));
+                Uni_B1& current_summand =  indecomposable_summands[x_index].back();
+                current_summand.compute_area_polynomial(slope_bounds);
                 grid_ind_dimensions.push_back(sub_M.get_num_rows());
+                int dim = current_summand.d1.get_num_rows();
+                if(false){
+                    if(dim > 2){
+                        current_summand.d1.to_stream_r2(std::cout);
+                    }
+                }
+
+                if(false){
+                    r2degree upper_grid_corner = {next_x, y_next};
+                    current_summand.compute_slope_subdivision(slope_bounds, subspaces, grid_point, upper_grid_corner);
+                }
             }
         }
     }
-    if (max_dim >= 6){
+    if (max_dim >= 7){
         // std::cout << " Careful, there are high-dimensional summands which might slow down HNF computation excessively." << std::endl;
     }  
 }

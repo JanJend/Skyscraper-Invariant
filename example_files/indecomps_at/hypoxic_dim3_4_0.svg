@@ -1,0 +1,37 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0.0172534 -0.4954 0.0388993 0.469512'>
+<g transform='scale(6.03497, -1)'>
+<polygon points='0.020495,0.111789 0.0529111,0.111789 0.0529111,0.456274 0.020495,0.456274 ' fill='#FF6B6B' fill-opacity='0.3' stroke='none'/>
+<polygon points='0.0529111,0.111789 0.020495,0.111789 0.020495,0.0650141 0.0529111,0.0650141 ' fill='#4ECDC4' fill-opacity='0.3' stroke='none'/>
+<line x1='0.020495' y1='0.111789' x2='0.020495' y2='0.456274' stroke='black' stroke-width='9.72482e-05'/>
+<line x1='0.020495' y1='0.0650141' x2='0.0529111' y2='0.0650141' stroke='black' stroke-width='9.72482e-05'/>
+<line x1='0.0529111' y1='0.111789' x2='0.0529111' y2='0.456274' stroke='black' stroke-width='9.72482e-05'/>
+<line x1='0.020495' y1='0.456274' x2='0.0529111' y2='0.456274' stroke='black' stroke-width='9.72482e-05'/>
+<line x1='0.020495' y1='0.0650141' x2='0.020495' y2='0.111789' stroke='black' stroke-width='9.72482e-05'/>
+<line x1='0.0529111' y1='0.0650141' x2='0.0529111' y2='0.111789' stroke='black' stroke-width='9.72482e-05'/>
+<line x1='0.020495' y1='0.111789' x2='0.0529111' y2='0.111789' stroke='black' stroke-width='9.72482e-05'/>
+<circle cx='0.020495' cy='0.0650141' r='0.000194496' fill='black'/>
+<circle cx='0.020495' cy='0.456274' r='0.000194496' fill='black'/>
+<circle cx='0.0529111' cy='0.0650141' r='0.000194496' fill='black'/>
+<circle cx='0.0529111' cy='0.456274' r='0.000194496' fill='black'/>
+<circle cx='0.020495' cy='0.111789' r='0.000194496' fill='black'/>
+<circle cx='0.0529111' cy='0.111789' r='0.000194496' fill='black'/>
+<line x1='0.0258977' y1='0.130224' x2='0.0548561' y2='0.130224' stroke='#5B7C99' stroke-width='7.29362e-05'/>
+<line x1='0.0258977' y1='0.130224' x2='0.0258977' y2='0.458219' stroke='#5B7C99' stroke-width='7.29362e-05'/>
+<line x1='0.0258977' y1='0.130224' x2='0.0258977' y2='0.13071' stroke='#5B7C99' stroke-width='5.10553e-05'/>
+<text x='0.0258977' y='0.131197' font-size='0.000680738' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.165701,-1)' transform-origin='0.0258977 0.131197'>0.026</text>
+<line x1='0.036' y1='0.130' x2='0.036' y2='0.131' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.036' y='0.131' font-size='0.001' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.166,-1.000)' transform-origin='0.036 0.131'>0.036</text>
+<line x1='0.045' y1='0.130' x2='0.045' y2='0.131' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.045' y='0.131' font-size='0.001' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.166,-1.000)' transform-origin='0.045 0.131'>0.045</text>
+<line x1='0.055' y1='0.130' x2='0.055' y2='0.131' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.055' y='0.131' font-size='0.001' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.166,-1.000)' transform-origin='0.055 0.131'>0.055</text>
+<line x1='0.026' y1='0.130' x2='0.026' y2='0.130' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.027' y='0.130' font-size='0.001' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.166,-1.000)' transform-origin='0.027 0.130'>0.130</text>
+<line x1='0.026' y1='0.240' x2='0.026' y2='0.240' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.027' y='0.240' font-size='0.001' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.166,-1.000)' transform-origin='0.027 0.240'>0.240</text>
+<line x1='0.026' y1='0.349' x2='0.026' y2='0.349' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.027' y='0.349' font-size='0.001' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.166,-1.000)' transform-origin='0.027 0.349'>0.349</text>
+<line x1='0.026' y1='0.458' x2='0.026' y2='0.458' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.027' y='0.458' font-size='0.001' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.166,-1.000)' transform-origin='0.027 0.458'>0.458</text>
+</g>
+</svg>

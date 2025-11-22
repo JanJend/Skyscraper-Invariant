@@ -4,7 +4,7 @@
 #define HNF_HEADER_HPP
 
 #include "aida_interface.hpp"
-#include "hnf_uni_b1.hpp"
+#include "hnf_at.hpp"
 #include <unistd.h>
 #include <getopt.h>
 #include <H5Cpp.h>
@@ -16,35 +16,15 @@ using namespace graded_linalg;
 
 namespace hnf{
 
-
 void display_help();
 void display_version();
 void write_to_file(std::ostringstream& ostream, std::string& output_file_path, std::string& input_directory, std::string& file_without_extension, std::string& extension, std::string& output_string);
 
 
 using Block = aida::Block;
-using Module_w_slope = std::pair<Uni_B1<int>, double>;
 using Block_list = aida::Block_list;
-using HN_factors = vec<Module_w_slope>;
+using HN_factors = vec<Uni_B1>;
 
-
-struct slope_comparator{
-    bool operator()(const Module_w_slope& X, const Module_w_slope& Y) const noexcept;
-};
-
-Module_w_slope find_scss_bruteforce(const R2Mat& X,
-        vec<vec<SparseMatrix<int>>>& subspaces,
-        R2Mat& max_subspace,
-        const pair<r2degree>& bounds);
-
-HN_factors skyscraper_invariant(Block_list& summands,
-        vec<vec<SparseMatrix<int>>>& subspaces,
-        const pair<r2degree>& bounds);
-
-void skyscraper_invariant(const R2Mat& input,
-    HN_factors& result,
-    vec<vec<SparseMatrix<int>>>& subspaces,
-    const pair<r2degree>& bounds);
 
 void calculate_stats(const std::vector<int>& all_dimensions);
 
@@ -164,7 +144,7 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
             if(B_induced.get_num_rows() == 1){
                 grid_ind_dimensions.push_back(1);
                 all_scss_dimensions.push_back(1);
-                Uni_B1<int> res(B_induced);
+                Uni_B1 res(B_induced);
                 double slope = res.slope(slope_bounds);
                 if(slope == INFINITY){
                     assert(false);
@@ -234,14 +214,15 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
 * //TO-DO: Probably these should be lists, not vectors.
 */
 struct Dynamic_HNF {
-    vec<vec<Uni_B1<int>>> indecomposable_summands;
+    vec<vec<Uni_B1>> indecomposable_summands;
     vec<int> grid_ind_dimensions;
 
     Dynamic_HNF();
     void compute_HNF_row(aida::AIDA_functor& decomposer,
         R2Mat& M,
         int& y_index,
-        pair<r2degree> slope_bounds);
+        pair<r2degree> slope_bounds,
+        const vec<vec<SparseMatrix<int>>>& subspaces);
 };
 
 template <typename Container>
@@ -279,7 +260,8 @@ void update_HNF_rows_at_y_level(
     vec<pair<int>>& grid_locations,
     vec<Dynamic_HNF>& local_grid_row_data,
     aida::AIDA_functor& decomposer,
-    const pair<r2degree>& slope_bounds){
+    const pair<r2degree>& slope_bounds,
+    const vec<vec<SparseMatrix<int>>>& subspaces) {
 
     int k = -1;
     for(R2Mat& M : indecomps){
@@ -301,7 +283,7 @@ void update_HNF_rows_at_y_level(
         }
 
         if(recompute){
-            local_grid_row_data[k].compute_HNF_row(decomposer, M, local_y, slope_bounds);
+            local_grid_row_data[k].compute_HNF_row(decomposer, M, local_y, slope_bounds, subspaces);
         }
         if(local_y != -1){
             assert(current_grid_degree.second >= M.y_grid[local_y] );
@@ -444,7 +426,7 @@ void process_grid_cell(
         }
 
         
-        for( Uni_B1<int>& summand : local_summands){
+        for( Uni_B1& summand : local_summands){
             auto shifted_summand = summand;
             r2degree verschiebung = current_grid_degree - local_grid_degree;
             if( shifted_summand.d1.get_num_rows() == 0){
@@ -456,7 +438,7 @@ void process_grid_cell(
                     double area = shifted_summand.evaluate_area_polynomial(verschiebung);
                     R2Mat test_cutoff = shifted_summand.d1.submodule_generated_at(current_grid_degree);
                     if(test_cutoff.get_num_rows() != 0){
-                        Uni_B1<int> test_summand(test_cutoff);
+                        Uni_B1 test_summand(test_cutoff);
                         // double test_slope = test_summand.slope(slope_bounds);
                         double test_area = test_summand.area(slope_bounds);
                         if(essentially_equal(area, test_area, 1e-7, 1e-9) == false){
@@ -570,7 +552,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
         current_grid_degree.first = lower_bound.first - grid_step.first; // Reset x-coordinate for each y-coordinate
         current_grid_degree.second = lower_bound.second + j*grid_step.second;
         // First in y direction, we recompute all local decompositions whenever necessary.
-        update_HNF_rows_at_y_level(current_grid_degree, indecomps, grid_locations, local_grid_row_data, decomposer, slope_bounds);
+        update_HNF_rows_at_y_level(current_grid_degree, indecomps, grid_locations, local_grid_row_data, decomposer, slope_bounds, subspaces);
         
         for(int i = 0; i < grid_length_x; i++){
             current_grid_degree.first += grid_step.first; 
@@ -585,7 +567,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
             }
             // Now actually compute the HNF, but use the data previously computed 
             process_grid_cell(i, j, current_grid_degree, indecomps, grid_locations, local_grid_row_data, 
-                composition_factors, grid_ind_dimensions, all_scss_dimensions, ostream, subspaces, slope_bounds, decomposer);
+               composition_factors, grid_ind_dimensions, all_scss_dimensions, ostream, subspaces, slope_bounds, decomposer);
         }
     }
 

@@ -1,0 +1,31 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0.03058 -0.853124 0.0194496 0.849594'>
+<g transform='scale(21.8409, -1)'>
+<polygon points='0.0484089,0.782325 0.0322008,0.782325 0.0322008,0.0743298 0.0484089,0.0743298 ' fill='#FF6B6B' fill-opacity='0.3' stroke='none'/>
+<line x1='0.0322008' y1='0.0743298' x2='0.0322008' y2='0.782325' stroke='black' stroke-width='4.86241e-05'/>
+<line x1='0.0322008' y1='0.0743298' x2='0.0484089' y2='0.0743298' stroke='black' stroke-width='4.86241e-05'/>
+<line x1='0.0484089' y1='0.0743298' x2='0.0484089' y2='0.782325' stroke='black' stroke-width='4.86241e-05'/>
+<line x1='0.0322008' y1='0.782325' x2='0.0484089' y2='0.782325' stroke='black' stroke-width='4.86241e-05'/>
+<circle cx='0.0322008' cy='0.0743298' r='9.72482e-05' fill='black'/>
+<circle cx='0.0322008' cy='0.782325' r='9.72482e-05' fill='black'/>
+<circle cx='0.0484089' cy='0.0743298' r='9.72482e-05' fill='black'/>
+<circle cx='0.0484089' cy='0.782325' r='9.72482e-05' fill='black'/>
+<line x1='0.0349022' y1='0.192329' x2='0.0493814' y2='0.192329' stroke='#5B7C99' stroke-width='3.64681e-05'/>
+<line x1='0.0349022' y1='0.192329' x2='0.0349022' y2='0.783297' stroke='#5B7C99' stroke-width='3.64681e-05'/>
+<line x1='0.0349022' y1='0.192329' x2='0.0349022' y2='0.192572' stroke='#5B7C99' stroke-width='2.55277e-05'/>
+<text x='0.0349022' y='0.192815' font-size='0.000340369' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.0457857,-1)' transform-origin='0.0349022 0.192815'>0.035</text>
+<line x1='0.040' y1='0.192' x2='0.040' y2='0.193' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.040' y='0.193' font-size='0.000' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.046,-1.000)' transform-origin='0.040 0.193'>0.040</text>
+<line x1='0.045' y1='0.192' x2='0.045' y2='0.193' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.045' y='0.193' font-size='0.000' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.046,-1.000)' transform-origin='0.045 0.193'>0.045</text>
+<line x1='0.049' y1='0.192' x2='0.049' y2='0.193' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.049' y='0.193' font-size='0.000' font-family='Arial, sans-serif' text-anchor='middle' fill='#5B7C99' transform='scale(0.046,-1.000)' transform-origin='0.049 0.193'>0.049</text>
+<line x1='0.035' y1='0.192' x2='0.035' y2='0.192' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.035' y='0.192' font-size='0.000' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.046,-1.000)' transform-origin='0.035 0.192'>0.192</text>
+<line x1='0.035' y1='0.389' x2='0.035' y2='0.389' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.035' y='0.389' font-size='0.000' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.046,-1.000)' transform-origin='0.035 0.389'>0.389</text>
+<line x1='0.035' y1='0.586' x2='0.035' y2='0.586' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.035' y='0.586' font-size='0.000' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.046,-1.000)' transform-origin='0.035 0.586'>0.586</text>
+<line x1='0.035' y1='0.783' x2='0.035' y2='0.783' stroke='#5B7C99' stroke-width='0.000'/>
+<text x='0.035' y='0.783' font-size='0.000' font-family='Arial, sans-serif' text-anchor='start' fill='#5B7C99' transform='scale(0.046,-1.000)' transform-origin='0.035 0.783'>0.783</text>
+</g>
+</svg>

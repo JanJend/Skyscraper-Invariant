@@ -65,41 +65,73 @@ include_directories(${CGAL_INCLUDE_DIRS})
 include_directories(${AIDA_DIR}/include)
 include_directories(${AIDA_DIR}/src)
 
-# Main HNF executable
-add_executable(hnf_main
-    src/hnf.cpp
-    src/hnf_uni_b1.cpp 
-    hnf_main.cpp
+# After project() declaration
+option(BUILD_EXP "Build only hnf_at_origin and large_induced_indecomposables" OFF)
+
+if(NOT BUILD_EXP)
+
+    # Main HNF executable
+    add_executable(hnf_main
+        src/hnf.cpp
+        src/hnf_uni_b1.cpp 
+        hnf_main.cpp
+    )
+
+    target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_TIMER_LIBRARY}
+        ${Boost_CHRONO_LIBRARY}
+        ${Boost_SYSTEM_LIBRARY} ${HDF5_LIBRARIES} CGAL::CGAL)
+    set_target_properties(hnf_main PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+
+    # Makes filtered landscapes from .sky files
+    add_executable(filt_landscape_from_sky
+        src/filt_landscape.cpp
+        src/file_reader.cpp
+        filt_landscape_from_sky.cpp
+    )
+    set_target_properties(filt_landscape_from_sky PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+    target_link_libraries(filt_landscape_from_sky ${Boost_LIBRARIES})
+
+    # Makes the module to quiver representation conversion
+    add_executable(pres_to_quiver
+        pres_to_quiver.cpp
+    )
+    set_target_properties(pres_to_quiver PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+
+    # Make the arrangement test
+    add_executable(arrangement_test
+        src/hnf_uni_b1.cpp
+        arrangement_test.cpp
+    )
+    target_link_libraries(arrangement_test ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)
+    set_target_properties(arrangement_test PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+endif()
+
+add_executable(large_induced_indecomposables
+    large_induced_indecomposables.cpp
 )
 
-target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_TIMER_LIBRARY}
+target_link_libraries(large_induced_indecomposables ${AIDA_LIBRARY} ${Boost_TIMER_LIBRARY}
     ${Boost_CHRONO_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY} ${HDF5_LIBRARIES} CGAL::CGAL)
-set_target_properties(hnf_main PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+    ${Boost_SYSTEM_LIBRARY})
+set_target_properties(large_induced_indecomposables PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
-# Makes filtered landscapes from .sky files
-add_executable(filt_landscape_from_sky
-    src/filt_landscape.cpp
-    src/file_reader.cpp
-    filt_landscape_from_sky.cpp
+add_executable(hnf_at_origin
+    src/hnf_at.cpp
+    src/uni_b1.cpp 
+    hnf_at_origin.cpp
 )
-set_target_properties(filt_landscape_from_sky PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+target_link_libraries(hnf_at_origin  ${Boost_TIMER_LIBRARY}
+    ${Boost_CHRONO_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY} )
+set_target_properties(hnf_at_origin PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
-# Makes the module to quiver representation conversion
-add_executable(pres_to_quiver
-    pres_to_quiver.cpp
-)
-set_target_properties(pres_to_quiver PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-target_link_libraries(filt_landscape_from_sky ${Boost_LIBRARIES})
+if(BUILD_EXP)
+    install(TARGETS large_induced_indecomposables hnf_at_origin
+        RUNTIME DESTINATION bin
+    )
+else()
+    install(TARGETS hnf_main filt_landscape_from_sky pres_to_quiver arrangement_test large_induced_indecomposables hnf_at_origin
+        RUNTIME DESTINATION bin
+    )
+endif()
 
-# Make the arrangement test
-add_executable(arrangement_test
-    src/hnf_uni_b1.cpp
-    arrangement_test.cpp
-)
-target_link_libraries(arrangement_test ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)
-set_target_properties(arrangement_test PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-
-install(TARGETS hnf_main filt_landscape_from_sky pres_to_quiver arrangement_test
-    RUNTIME DESTINATION bin
-)

@@ -1,0 +1,39 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0.500988 0.428889 0.277556 0.206069'>
+<g transform='scale(1, -1)'>
+<polygon points='0.755414,-0.428889 0.524117,-0.428889 0.524117,-0.600613 0.755414,-0.600613 ' fill='#FF6B6B' fill-opacity='0.3' stroke='none'/>
+<line x1='0.562667' y1='-0.571993' x2='0.769292' y2='-0.571993' stroke='#5B7C99' stroke-width='0.000388579'/>
+<line x1='0.562667' y1='-0.571993' x2='0.562667' y2='-0.415011' stroke='#5B7C99' stroke-width='0.000388579'/>
+<line x1='0.524117' y1='-0.571993' x2='0.524117' y2='-0.576156' stroke='#5B7C99' stroke-width='0.000277556'/>
+<text x='0.524117' y='-0.580319' font-size='0.00555112' text-anchor='middle' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.524117 -0.580319'>0.5</text>
+<line x1='0.6' y1='-0.6' x2='0.6' y2='-0.6' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.6' font-size='0.0' text-anchor='middle' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.6'>0.6</text>
+<line x1='0.6' y1='-0.6' x2='0.6' y2='-0.6' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.6' font-size='0.0' text-anchor='middle' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.6'>0.6</text>
+<line x1='0.7' y1='-0.6' x2='0.7' y2='-0.6' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.7' y='-0.6' font-size='0.0' text-anchor='middle' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.7 -0.6'>0.7</text>
+<line x1='0.7' y1='-0.6' x2='0.7' y2='-0.6' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.7' y='-0.6' font-size='0.0' text-anchor='middle' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.7 -0.6'>0.7</text>
+<line x1='0.8' y1='-0.6' x2='0.8' y2='-0.6' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.8' y='-0.6' font-size='0.0' text-anchor='middle' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.8 -0.6'>0.8</text>
+<line x1='0.6' y1='-0.6' x2='0.6' y2='-0.6' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.6' font-size='0.0' text-anchor='end' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.6'>-0.6</text>
+<line x1='0.6' y1='-0.6' x2='0.6' y2='-0.6' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.6' font-size='0.0' text-anchor='end' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.6'>-0.6</text>
+<line x1='0.6' y1='-0.5' x2='0.6' y2='-0.5' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.5' font-size='0.0' text-anchor='end' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.5'>-0.5</text>
+<line x1='0.6' y1='-0.5' x2='0.6' y2='-0.5' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.5' font-size='0.0' text-anchor='end' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.5'>-0.5</text>
+<line x1='0.6' y1='-0.5' x2='0.6' y2='-0.5' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.5' font-size='0.0' text-anchor='end' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.5'>-0.5</text>
+<line x1='0.6' y1='-0.4' x2='0.6' y2='-0.4' stroke='#5B7C99' stroke-width='0.0'/>
+<text x='0.6' y='-0.4' font-size='0.0' text-anchor='end' fill='#5B7C99' transform='scale(1,-1)' transform-origin='0.6 -0.4'>-0.4</text>
+<line x1='0.5' y1='-0.6' x2='0.5' y2='-0.4' stroke='black' stroke-width='0.0'/>
+<line x1='0.5' y1='-0.6' x2='0.8' y2='-0.6' stroke='black' stroke-width='0.0'/>
+<line x1='0.8' y1='-0.6' x2='0.8' y2='-0.4' stroke='black' stroke-width='0.0'/>
+<line x1='0.5' y1='-0.4' x2='0.8' y2='-0.4' stroke='black' stroke-width='0.0'/>
+<circle cx='0.5' cy='-0.6' r='0.0' fill='black'/>
+<circle cx='0.5' cy='-0.4' r='0.0' fill='black'/>
+<circle cx='0.8' cy='-0.6' r='0.0' fill='black'/>
+<circle cx='0.8' cy='-0.4' r='0.0' fill='black'/>
+</g>
+</svg>
