@@ -73,7 +73,8 @@ if(NOT BUILD_EXP)
     # Main HNF executable
     add_executable(hnf_main
         src/hnf.cpp
-        src/hnf_uni_b1.cpp 
+        src/uni_b1.cpp 
+        src/hnf_at.cpp
         hnf_main.cpp
     )
 
@@ -99,7 +100,9 @@ if(NOT BUILD_EXP)
 
     # Make the arrangement test
     add_executable(arrangement_test
-        src/hnf_uni_b1.cpp
+        src/subdivision.cpp
+        src/hnf_at.cpp
+        src/uni_b1.cpp 
         arrangement_test.cpp
     )
     target_link_libraries(arrangement_test ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)

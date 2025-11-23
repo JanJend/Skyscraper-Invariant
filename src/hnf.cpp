@@ -119,8 +119,8 @@ void compare_slopes_test(r2degree current_grid_degree,
     assert(test_factors.size() == composition_factors.size());
     auto it = test_factors.begin();
     for(auto& hn_factor : composition_factors){
-        slopes.push_back(hn_factor.second);
-        test_slopes.push_back(it->second);
+        slopes.push_back(hn_factor.slope_value);
+        test_slopes.push_back(it->slope_value);
         it++;
     }
     for(size_t l = 0; l < slopes.size(); l++){
@@ -132,9 +132,9 @@ void compare_slopes_test(r2degree current_grid_degree,
             std::cout << "  Local grid degree: " << local_grid_degree << std::endl;
             std::cout << "  i: " << i << ", j: " << j << ", k: " << k << std::endl;
             std::cout << "  Summand: " << std::endl;
-            composition_factors[l].first.d1.print_graded();
+            composition_factors[l].d1.print_graded();
             std::cout << "  Test_summand: " << std::endl;
-            test_factors[l].first.d1.print_graded();
+            test_factors[l].d1.print_graded();
             assert(false);
         }
     }
@@ -148,7 +148,7 @@ Dynamic_HNF::Dynamic_HNF() {
 
 void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
         R2Mat& M, int& y_index, pair<r2degree> slope_bounds,
-        const vec<vec<SparseMatrix<int>>>& subspaces) {
+        const vec<vec<vec<SparseMatrix<int>>>>& subspaces) {
     assert(y_index > -1);
     double y_coordinate = M.y_grid[y_index];
     int x_length = M.x_grid.size();
@@ -198,7 +198,7 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
 
                 if(false){
                     r2degree upper_grid_corner = {next_x, y_next};
-                    current_summand.compute_slope_subdivision(slope_bounds, subspaces, grid_point, upper_grid_corner);
+                    // current_summand.compute_slope_subdivision(slope_bounds, subspaces, grid_point, upper_grid_corner);
                 }
             }
         }

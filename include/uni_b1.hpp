@@ -14,14 +14,10 @@ using R2Mat = R2GradedSparseMatrix<int>;
 // Forward declarations
 
 struct Uni_B1;
-struct Slope_subdivision;
 
 struct Uni_B1 : R2Resolution<int> {
-    R2Mat d1;
-    R2Mat d2;
     double slope_value;
     std::array<double, 3> area_polynomial;
-    // std::unique_ptr<Slope_subdivision> slope_subdiv;  
 
     void compute_arrangement_quotients(vec<SparseMatrix<int>> subspaces);
     void compute_slope_subdivision(const pair<r2degree>& bounds, 
@@ -35,24 +31,25 @@ struct Uni_B1 : R2Resolution<int> {
 
     // Copy constructor
     Uni_B1(const Uni_B1& other) 
-        : d1(other.d1), d2(other.d2), area_polynomial(other.area_polynomial) {
+        : R2Resolution<int>(other), area_polynomial(other.area_polynomial), slope_value(other.slope_value) {
     }
     
-    // Move constructor
+    // Move constructor (already have)
     Uni_B1(Uni_B1&& other) = default;
+
+    // Move assignment
+    Uni_B1& operator=(Uni_B1&& other) = default;
     
     // Copy assignment
     Uni_B1& operator=(const Uni_B1& other) {
         if (this != &other) {
-            d1 = other.d1;
-            d2 = other.d2;
+            R2Resolution<int>::operator=(other);
             area_polynomial = other.area_polynomial;
+            slope_value = other.slope_value;
         }
         return *this;
     }
-    
-    // Move assignment
-    Uni_B1& operator=(Uni_B1&& other) = default;
+
 
     double area() const;
     double area(const r2degree& bound) const;

@@ -262,6 +262,12 @@ struct Slope_subdivision {
     }
 };
 
+void compute_slope_subdivision(Uni_B1& res, 
+    const pair<r2degree>& bounds, 
+    const vec<vec<SparseMatrix<int>>>& subspaces,
+    const r2degree& cell_start,
+    const r2degree& cell_boundary);
+
 std::vector<Point_3> dual_points_polys(const vec<std::array<double,3>>& polynomials);
 
 

@@ -3,7 +3,7 @@
 namespace hnf {
 
 Uni_B1::Uni_B1(R2Mat&& d1_, bool is_minimal)
-    : d1(std::move(d1_)) {
+    : R2Resolution<int>(std::move(d1_)) {
     if(is_minimal && d1.get_num_rows() == 1){
         assert(std::is_sorted(d1.col_degrees.begin(), d1.col_degrees.end(), Degree_traits<r2degree>::lex_lambda()));
         d2 = R2Mat(d1.get_num_cols()-1, d1.get_num_cols());
@@ -25,7 +25,7 @@ Uni_B1::Uni_B1(R2Mat&& d1_, bool is_minimal)
 
 
 Uni_B1::Uni_B1(const R2Mat& d1_, bool is_minimal)
-    : d1(d1_) {
+    : R2Resolution<int>(d1_) {
     if(is_minimal && d1.get_num_rows() == 1){
         assert(std::is_sorted(d1.col_degrees.begin(), d1.col_degrees.end(), Degree_traits<r2degree>::lex_lambda()));
         d2 = R2Mat(d1.get_num_cols()-1, d1.get_num_cols());

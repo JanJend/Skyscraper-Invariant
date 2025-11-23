@@ -1,4 +1,4 @@
-#include "hnf_uni_b1.hpp"
+#include "subdivision.hpp"
 
 namespace fs = std::filesystem;
 
@@ -37,8 +37,8 @@ void get_arrangement(std::filesystem::path& input_path,
         << ") to (" << cell_boundary.first << ", " << cell_boundary.second << ")\n";
     Uni_B1 M_res(M);
     auto subspaces = all_sparse_subspaces(k);
-    M_res.compute_slope_subdivision(bounding_box, subspaces, cell_start, cell_boundary);
-    M_res.slope_subdiv->export_to_svg(output_path.string(), bounding_box.first.first, bounding_box.first.second);
+    compute_slope_subdivision(M_res, bounding_box, subspaces, cell_start, cell_boundary);
+    // M_res.slope_subdiv->export_to_svg(output_path.string(), bounding_box.first.first, bounding_box.first.second);
 }
 
 int main(int argc, char** argv) {

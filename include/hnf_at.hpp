@@ -22,15 +22,15 @@ Uni_B1 find_scss_bruteforce(const R2Mat& X,
 void skyscraper_invariant(const R2Mat& input,
     HN_factors& result,
     vec<vec<vec<SparseMatrix<int>>>>& subspaces,
-    const pair<r2degree>& bounds);
+    const pair<r2degree>& bounds, const bool filter = false);
 
 template<typename Container>
 HN_factors skyscraper_invariant_sum(Container& summands,
         vec<vec<vec<SparseMatrix<int>>>>& subspaces,
-        const pair<r2degree>& bounds) {
+        const pair<r2degree>& bounds, const bool filter = false) {
     HN_factors result;
     for(R2Mat& X : summands){
-        skyscraper_invariant(X, result, subspaces, bounds);
+        skyscraper_invariant(X, result, subspaces, bounds, filter);
     }
     return result;
 }
