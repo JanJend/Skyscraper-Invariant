@@ -1,38 +1,35 @@
 #!/bin/sh
-  
 FOLDER="${1:-.}"
 PROGRAM="/home/wsljan/MP-Workspace/Persistence-Algebra/build/pres_to_quiver"
-OUTPUT="$FOLDER/origin_experiments.md"
-  
+OUTPUT="$FOLDER/quiver_experiments.md"
 echo "# Experiment Results" > "$OUTPUT"
 echo "" >> "$OUTPUT"
 echo "Generated on: $(date)" >> "$OUTPUT"
 echo "" >> "$OUTPUT"
   
-# Process each file matching the pattern axb.scc (where a,b are integers)
-for file in "$FOLDER"/*x*.scc; do
+for file in "$FOLDER"/*.scc; do
     [ -e "$file" ] || continue
-    
     basename=$(basename "$file")
-    case "$basename" in
-        [0-9]*x[0-9]*.scc)
-            ;;
-        *)
-            continue
-            ;;
-    esac
     
     echo "## $basename" >> "$OUTPUT"
     echo "" >> "$OUTPUT"
-    start=$(date +%s%N)
-    echo '```' >> "$OUTPUT"
-    "$PROGRAM" "$file" "$file" >> "$OUTPUT" 2>&1
-    echo '```' >> "$OUTPUT"
-    end=$(date +%s%N)
-    duration=$(( (end - start) / 1000000 ))
-    echo "" >> "$OUTPUT"
-    echo "**Execution time:** ${duration}ms" >> "$OUTPUT"
-    echo "" >> "$OUTPUT"
+    
+    i=2
+    while [ $i -le 128 ]; do
+        echo "### i=$i" >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+        start=$(date +%s%N)
+        echo '```' >> "$OUTPUT"
+        "$PROGRAM" "$file" "$i" >> "$OUTPUT" 2>&1
+        echo '```' >> "$OUTPUT"
+        end=$(date +%s%N)
+        duration=$(awk "BEGIN {printf \"%.3f\", ($end - $start) / 1000000}")
+        echo "" >> "$OUTPUT"
+        echo "**Execution time:** ${duration}ms" >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+        
+        i=$((i * 2))
+    done
 done
   
 echo "Results saved to: $OUTPUT"

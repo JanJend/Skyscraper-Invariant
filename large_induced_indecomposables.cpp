@@ -11,7 +11,9 @@ using namespace graded_linalg;
 
 void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres, std::filesystem::path output_dir, vec<int> counter = vec<int>(50,0)) {
     aida::AIDA_functor decomposer = aida::AIDA_functor();
+    pres.compute_col_batches();
     pres.compute_grid_representation();
+    bool interval_enabled = false;
     int interval = 10;
     int pause_counter_x = interval;
     int pause_counter_y = interval;
@@ -23,23 +25,26 @@ void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres, std::fil
             const double& e = pres.y_grid[j];
             std::pair<int, int> current_index = {i, j};
             bool in_interval = false;
-            for(const auto& [a, b] : checked_list) {
-                if(i >= a && i <= a + interval && 
-                j >= b && j <= b + interval) {
-                    in_interval = true;
-                    break;
+            if(interval_enabled){
+                for(const auto& [a, b] : checked_list) {
+                    if(i >= a && i <= a + interval && 
+                    j >= b && j <= b + interval) {
+                        in_interval = true;
+                        break;
+                    }
                 }
-            }
-            if(in_interval) {
-                continue;
+                if(in_interval) {
+                    continue;
+                }
             }
             r2degree degree = {d, e};
             R2GradedSparseMatrix<int> submodule = pres.submodule_generated_at(degree);
+            submodule.compute_col_batches();
             aida::Block_list B_list;
             decomposer(submodule, B_list);
             for(const auto& ind : B_list){
                 int dim = ind.get_num_rows();
-                if(dim > 1 && counter[dim] < 10){
+                if(dim > 4 && counter[dim] < 10){
 
                     // Create filename in the output directory
                     std::string filename = std::to_string(dim) + "_" + std::to_string(counter[dim]) + ".scc";
