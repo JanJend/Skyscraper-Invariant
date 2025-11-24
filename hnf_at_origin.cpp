@@ -35,6 +35,9 @@ int main(int argc, char** argv) {
     if (argc < 2 || argc > 4) {
         std::cerr << "Usage: " << argv[0] << " <file_path> <upper_bound> <filter>" << std::endl;
         return 1;
+        //    filepath = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_200x200_snapped_induced/4_0.scc";
+        //    upper_bound = {0.5, 2.2};
+        //    filter = true;
     } else {
         filepath = argv[1];
         if (argc >= 3) {

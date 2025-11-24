@@ -2,6 +2,22 @@
 
 namespace hnf {
 
+void recalculate_slopes(HN_factors& composition_factors) {
+    double last_slope = composition_factors.front().slope_value;
+    int aggregated_dimension = composition_factors.front().d1.get_num_rows();
+    for(size_t i = 1; i < composition_factors.size(); i++){
+        double current_slope = composition_factors[i].slope_value;
+        int current_dimension = composition_factors[i].d1.get_num_rows();
+        double area_last = static_cast<double>(aggregated_dimension) / last_slope; 
+        double area_current = static_cast<double>(current_dimension) / current_slope;
+        double total_area = area_last + area_current;
+        double new_slope = static_cast<double>(aggregated_dimension + current_dimension) / total_area;
+        composition_factors[i].slope_value = new_slope;
+        last_slope = new_slope;
+        aggregated_dimension += current_dimension;
+    }
+}
+
 
 void calculate_stats(const std::vector<int>& all_dimensions) {
     if (all_dimensions.empty()) {

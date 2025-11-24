@@ -7,16 +7,9 @@ echo "" >> "$OUTPUT"
 echo "Generated on: $(date)" >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 # Process each file matching the pattern axb.scc (where a,b are integers)
-for file in "$FOLDER"/*x*.scc; do
+for file in "$FOLDER"/*.scc; do
     [ -e "$file" ] || continue
     basename=$(basename "$file")
-    case "$basename" in
-        [0-9]*x[0-9]*.scc)
-            ;;
-        *)
-            continue
-            ;;
-    esac
     echo "## $basename" >> "$OUTPUT"
     echo "" >> "$OUTPUT"
     start=$(date +%s%N)
