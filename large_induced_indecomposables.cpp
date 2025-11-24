@@ -9,12 +9,16 @@ using namespace graded_linalg;
 
 
 
-void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres, std::filesystem::path output_dir, vec<int> counter = vec<int>(50,0)) {
+void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres, 
+    std::filesystem::path output_dir, 
+    vec<int>& counter ) {
+
     aida::AIDA_functor decomposer = aida::AIDA_functor();
-    pres.compute_col_batches();
     pres.compute_grid_representation();
-    bool interval_enabled = false;
-    int interval = 10;
+    pres.sort_columns_lexicographically();
+    pres.compute_col_batches();
+    bool interval_enabled = true;
+    int interval = 5;
     int pause_counter_x = interval;
     int pause_counter_y = interval;
     bool pause = false;
@@ -41,15 +45,33 @@ void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres, std::fil
             R2GradedSparseMatrix<int> submodule = pres.submodule_generated_at(degree);
             submodule.compute_col_batches();
             aida::Block_list B_list;
+            if(false){
+                int dim = submodule.get_num_rows();
+                if(dim > 5 && counter[dim] < 10){
+                    std::string filename = std::to_string(dim) + "_" + std::to_string(counter[dim]) + ".scc";
+                    std::filesystem::path specific_output_path = output_dir / filename;
+                    counter[dim]++;
+                    std::ofstream output_file(specific_output_path);
+                    if (!output_file.is_open()) {
+                        std::cerr << "Error: Unable to open output file " << specific_output_path << std::endl;
+                        return;
+                    } else {
+                        submodule.to_stream(output_file);
+                        checked_list.emplace_back(current_index);
+                        output_file.close();
+                    }
+                }
+                continue;
+            }
             decomposer(submodule, B_list);
             for(const auto& ind : B_list){
                 int dim = ind.get_num_rows();
-                if(dim > 4 && counter[dim] < 10){
-
+                if(dim > 1 && counter[dim] < 10){
+                    // ind.to_stream_r2(std::cout);
                     // Create filename in the output directory
                     std::string filename = std::to_string(dim) + "_" + std::to_string(counter[dim]) + ".scc";
                     std::filesystem::path specific_output_path = output_dir / filename;
-                    
+                    counter[dim]++;
                     std::ofstream output_file(specific_output_path);
                     if (!output_file.is_open()) {
                         std::cerr << "Error: Unable to open output file " << specific_output_path << std::endl;
@@ -58,8 +80,6 @@ void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres, std::fil
                         ind.to_stream(output_file);
                         checked_list.emplace_back(current_index);
                         output_file.close();
-                        counter[dim]++;
-                        std::cout << "Large indecomposable Submodule at degree (" << degree.first << ", " << degree.second << ") computed and saved to: " << specific_output_path << std::endl;
                     }
                 } 
             }
@@ -91,7 +111,7 @@ int main(int argc, char** argv) {
 
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <file_path> " << std::endl;
-        input_path = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_200x200_snapped.sccsum";
+        input_path = "/home/wsljan/MP-Workspace/Skyscraper-Invariant/example_files/presentations/torus3.sccsum";
     } else {
         input_path = argv[1];
     }
@@ -109,7 +129,8 @@ int main(int argc, char** argv) {
         large_induced_indecomp_submodules_from_sum(input_path, output_dir);
     } else {
         R2GradedSparseMatrix<int> pres = R2GradedSparseMatrix<int>(input_path.string());
-        large_induced_indecomp_submodules(pres, output_dir);
+        vec<int> counter = vec<int>(50,0);
+        large_induced_indecomp_submodules(pres, output_dir, counter);
     }
     
     return 0;

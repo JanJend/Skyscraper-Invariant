@@ -236,7 +236,7 @@ struct Slope_subdivision {
                     << "' font-size='" << font_size << "' font-family='Arial, sans-serif' "
                     << "text-anchor='middle' fill='" << axis_color
                     << "' transform='scale(1, -1)' transform-origin='" << x_val << " " << text_y << "'>"
-                    << std::fixed << std::setprecision(3) << x_val << "</text>\n";
+                    << std::fixed << std::setprecision(2) << x_val << "</text>\n";
         }
 
         // Y-axis ticks and labels
@@ -253,8 +253,25 @@ struct Slope_subdivision {
                     << "' font-size='" << font_size << "' font-family='Arial, sans-serif' "
                     << "text-anchor='start' fill='" << axis_color
                     << "' transform='scale(1, -1)' transform-origin='" << text_x << " " << y_val << "'>"
-                    << std::fixed << std::setprecision(3) << y_val << "</text>\n";
+                    << std::fixed << std::setprecision(2) << y_val << "</text>\n";
         }
+        // Origin labels
+        double origin_label_offset = tick_size * 2.5;
+        // X-axis origin label
+        double origin_text_y = axes_origin_y + origin_label_offset;
+        svg_file << "<text x='" << axes_origin_x << "' y='" << origin_text_y
+                << "' font-size='" << font_size << "' font-family='Arial, sans-serif' "
+                << "text-anchor='middle' fill='" << axis_color
+                << "' transform='scale(1, -1)' transform-origin='" << axes_origin_x << " " << origin_text_y << "'>"
+                << std::fixed << std::setprecision(2) << axes_origin_x << "</text>\n";
+
+        // Y-axis origin label
+        double origin_text_x = axes_origin_x + origin_label_offset;
+        svg_file << "<text x='" << origin_text_x << "' y='" << axes_origin_y
+                << "' font-size='" << font_size << "' font-family='Arial, sans-serif' "
+                << "text-anchor='start' fill='" << axis_color
+                << "' transform='scale(1, -1)' transform-origin='" << origin_text_x << " " << axes_origin_y << "'>"
+                << std::fixed << std::setprecision(2) << axes_origin_y << "</text>\n";
 
         svg_file << "</g>\n</svg>";
         svg_file.close();
@@ -262,7 +279,7 @@ struct Slope_subdivision {
     }
 };
 
-void compute_slope_subdivision(Uni_B1& res, 
+Slope_subdivision compute_slope_subdivision(Uni_B1& res, 
     const pair<r2degree>& bounds, 
     const vec<vec<SparseMatrix<int>>>& subspaces,
     const r2degree& cell_start,

@@ -342,7 +342,7 @@ void compute_arrangement_quotients(vec<SparseMatrix<int>> subspaces){
 };
 
 
-void compute_slope_subdivision(Uni_B1& res, 
+Slope_subdivision compute_slope_subdivision(Uni_B1& res, 
     const pair<r2degree>& bounds, 
     const vec<vec<SparseMatrix<int>>>& subspaces,
     const r2degree& cell_start,
@@ -351,7 +351,7 @@ void compute_slope_subdivision(Uni_B1& res,
     int k = X.get_num_rows();
     if(k == 1){
         std::cout << "Tried to compute slope subdivision for a module of dimension 1. Nothing to do." << std::endl;
-        return;
+        return Slope_subdivision(Arrangement());
     }
     vec<std::array<double, 3>> slope_polynomials;
     if(subspaces.size() < k){
@@ -378,9 +378,11 @@ void compute_slope_subdivision(Uni_B1& res,
         }
     }
 
-    Arrangement slope_subdiv = subdivision_from_polynomials(subspaces[k-1], slope_polynomials, submodules, cell_start, cell_boundary);
-
+    Arrangement arr = subdivision_from_polynomials(subspaces[k-1], slope_polynomials, submodules, cell_start, cell_boundary);
+    Slope_subdivision result(arr);
     compute_arrangement_quotients(subspaces[k-1]);
+
+    return result;
 }
 
 

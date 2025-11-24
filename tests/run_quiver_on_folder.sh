@@ -14,8 +14,7 @@ for file in "$FOLDER"/*.scc; do
     echo "## $basename" >> "$OUTPUT"
     echo "" >> "$OUTPUT"
     
-    i=2
-    while [ $i -le 128 ]; do
+    for i in 2 3 4 5 6; do
         echo "### i=$i" >> "$OUTPUT"
         echo "" >> "$OUTPUT"
         start=$(date +%s%N)
@@ -27,8 +26,6 @@ for file in "$FOLDER"/*.scc; do
         echo "" >> "$OUTPUT"
         echo "**Execution time:** ${duration}ms" >> "$OUTPUT"
         echo "" >> "$OUTPUT"
-        
-        i=$((i * 2))
     done
 done
   

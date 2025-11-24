@@ -2,7 +2,7 @@
 FOLDER="${1:-.}"
 VENV="/home/wsljan/myenv"
 PROGRAM="/home/wsljan/MP-Workspace/sky-inv-quiv/scripts/cheng_alg.py"
-OUTPUT="$FOLDER/cheng_alg_Q_experiments.md"
+OUTPUT="$FOLDER/cheng_alg_F2_experiments.md"
 
 echo "# Experiment Results" > "$OUTPUT"
 echo "" >> "$OUTPUT"
@@ -24,8 +24,8 @@ for file in "$FOLDER"/*x*.txt; do
     
     # Skip 32x32 and 16x16 files
     case "$basename" in
-        *32x32*.txt|*16x16*.txt)
-            echo "Skipping $basename (32x32 or 16x16)"
+        *32x32*.txt|*16x16*|*8x8*.txt)
+            echo "Skipping $basename (32x32 or 16x16 or 8x8)"
             continue
             ;;
     esac
@@ -35,7 +35,7 @@ for file in "$FOLDER"/*x*.txt; do
     
     start=$(date +%s%N)
     echo '```' >> "$OUTPUT"
-    timeout 600s "$VENV/bin/python" "$PROGRAM" "$file" "Q" >> "$OUTPUT" 2>&1
+    timeout 600s "$VENV/bin/python" "$PROGRAM" "$file" "F2" >> "$OUTPUT" 2>&1
     exit_code=$?
     echo '```' >> "$OUTPUT"
     end=$(date +%s%N)
