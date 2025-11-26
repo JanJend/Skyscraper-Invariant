@@ -15,7 +15,7 @@ for file in "$FOLDER"/*.scc; do
     echo "" >> "$OUTPUT"
     
     for i in 2 3 4 5 6; do
-        echo "### i=$i" >> "$OUTPUT"
+        echo "### i=$i" >> "$OUTPUT"s
         echo "" >> "$OUTPUT"
         start=$(date +%s%N)
         echo '```' >> "$OUTPUT"

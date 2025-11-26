@@ -2,6 +2,8 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace hnf;
+
 int main(int argc, char* argv[]) {
     if (argc > 6) {
         std::cerr << "Usage: " << argv[0] << " [<input.sky>] [<theta>] [<k>] \n";

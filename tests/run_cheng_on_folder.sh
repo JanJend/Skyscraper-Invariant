@@ -35,7 +35,7 @@ for file in "$FOLDER"/*x*.txt; do
     
     start=$(date +%s%N)
     echo '```' >> "$OUTPUT"
-    timeout 600s "$VENV/bin/python" "$PROGRAM" "$file" "F2" >> "$OUTPUT" 2>&1
+    timeout 600s "$VENV/bin/python" "$PROGRAM" "$file" "F_2" >> "$OUTPUT" 2>&1
     exit_code=$?
     echo '```' >> "$OUTPUT"
     end=$(date +%s%N)
