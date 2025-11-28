@@ -26,13 +26,14 @@ int main(int argc, char* argv[]) {
         
         size_t last_dot = input_file.find_last_of('.');
         output_file = (last_dot != std::string::npos) ? input_file.substr(0, last_dot) : input_file;
-        output_file += "_landscape_" + theta_str + "_" + std::to_string(k) + ".txt";
+        output_file += "_landscape_" + theta_str + ".png";
     }
     
     try {
         hnf::GridData data = hnf::bars_from_sky(input_file);
-        compute_landscape(data, output_file, theta, k);
+        auto landscape = hnf::compute_landscape(data, theta, k);
         std::cout << "Landscape computed successfully\n";
+        hnf::write_landscape_png(landscape, output_file);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;
