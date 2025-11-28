@@ -18,9 +18,10 @@ void hnf_at_origin(std::filesystem::path input_path, r2degree upper_bound, bool 
         bounds.second = bounds.second + r2degree{padding*range.first, padding*range.second};
     }
     vec<vec<vec<SparseMatrix<int>>>> subspaces = sparse_seperated_grassmannians<int>(dim);
-    HN_factors result;
+    vec<HN_factors> result;
     skyscraper_invariant(X, result, subspaces, bounds, filter);
-    for(auto& factor : result){
+    assert(result.size() == 1);
+    for(auto& factor : result[0]){
         std::cout << "Slope: " << factor.slope_value << " Module: \n";
         factor.d1.to_stream_r2(std::cout);
     }

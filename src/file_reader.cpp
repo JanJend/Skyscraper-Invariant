@@ -12,6 +12,18 @@
 
 namespace hnf {
 
+    double safe_stod(const std::string& str, const std::string& context) {
+    if (str.empty()) {
+        throw std::runtime_error("Empty string in " + context);
+    }
+    try {
+        return std::stod(str);
+    } catch (const std::exception& e) {
+        std::cerr << "stod failed at " << context << ": '" << str << "'" << std::endl;
+        throw;
+    }
+}
+
 GridData bars_from_sky(const std::string& filename) {
     std::ifstream file(filename);
     static char buffer[1 << 20]; // 1 MB buffer
@@ -43,13 +55,13 @@ GridData bars_from_sky(const std::string& filename) {
     
     std::vector<std::pair<double, double>> coords;
     for (auto it = coords_begin; it != coords_end; ++it) {
-        double x = std::stod((*it)[1]);
-        double y = std::stod((*it)[2]);
+        double x = safe_stod((*it)[1], "lattice vector x-coordinate");
+        double y = safe_stod((*it)[2], "lattice vector y-coordinate");
         coords.push_back({x, y});
     }
     
     if (coords.size() < 3) {
-        throw std::runtime_error("Expected at least 3 coordinate pairs");
+        throw std::runtime_error("Expected 3 coordinate pairs");
     }
     
     // Extract lattice vectors
@@ -84,8 +96,8 @@ GridData bars_from_sky(const std::string& filename) {
             
             i = std::stoi(line.substr(2, first_comma - 2));
             j = std::stoi(line.substr(first_comma + 1, second_comma - first_comma - 1));
-            current_position.first = std::stod(line.substr(paren_open + 1, coord_comma - paren_open - 1));
-            current_position.second = std::stod(line.substr(coord_comma + 1, paren_close - coord_comma - 1));
+            current_position.first = safe_stod(line.substr(paren_open + 1, coord_comma - paren_open - 1), "grid point x-coordinate");
+            current_position.second = safe_stod(line.substr(coord_comma + 1, paren_close - coord_comma - 1), "grid point y-coordinate");
         } else {
 
             std::istringstream iss(line);
@@ -93,7 +105,7 @@ GridData bars_from_sky(const std::string& filename) {
             
             // First token is slope
             std::getline(iss, token, ',');
-            double theta = std::stod(token);
+            double theta = safe_stod(token, "slope");
             
             // Parse relations
             std::vector<std::pair<double, double>> relations;
@@ -105,8 +117,8 @@ GridData bars_from_sky(const std::string& filename) {
                 if (paren_open != std::string::npos && 
                     semicolon != std::string::npos && 
                     paren_close != std::string::npos) {
-                    double x = std::stod(token.substr(paren_open + 1, semicolon - paren_open - 1));
-                    double y = std::stod(token.substr(semicolon + 1, paren_close - semicolon - 1));
+                    double x = safe_stod(token.substr(paren_open + 1, semicolon - paren_open - 1), "relation x-coordinate");
+                    double y = safe_stod(token.substr(semicolon + 1, paren_close - semicolon - 1), "relation y-coordinate");
                     relations.push_back({x, y});
                 } else {
                     throw std::runtime_error("Malformed relation: " + token);

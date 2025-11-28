@@ -18,7 +18,12 @@ namespace hnf{
 
 void display_help();
 void display_version();
-void write_to_file(std::ostringstream& ostream, std::string& output_file_path, std::string& input_directory, std::string& file_without_extension, std::string& extension, std::string& output_string);
+void write_to_file(const std::ostringstream& ostream, 
+    std::string output_file_path, 
+    const std::string& input_directory, 
+    const std::string& file_without_extension, 
+    const std::string& extension, 
+    const std::string& output_string);
 
 
 using Block = aida::Block;
@@ -33,6 +38,7 @@ vec<r2degree> get_grid_diagonal(pair<r2degree> bounds, int grid_length);
 r2degree get_grid_step(const r2degree& lower_bound, const r2degree& upper_bound,
     const int& grid_length_x, const int& grid_length_y);
 
+
 template< typename Outputstream>
 void to_stream(Outputstream& ostream, Uni_B1& scss){
     if(scss.d1.get_num_rows() == 1){
@@ -42,9 +48,8 @@ void to_stream(Outputstream& ostream, Uni_B1& scss){
         }
         ostream << std::endl;
     } else {
-        std::cout << "  Passing a submodule of dimension " << scss.d1.get_num_rows() << std::endl;
-        ostream << scss.slope_value << std::endl;
-        scss.d1.to_stream_r2(ostream);
+        std::cerr << "  Passing a submodule of dimension " << scss.d1.get_num_rows() << std::endl;
+        std::cerr << "  this should not happen anymore." << std::endl;
     }
 }
 
@@ -122,14 +127,15 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
     std::cout << "  Modules are cut off at " << slope_bounds.second << std::endl;
     
 
-    array<HN_factors> composition_factors(grid_length_x, vec<HN_factors>(grid_length_y));
+    vec<HN_factors> composition_factors;
+    composition_factors.reserve(100);
 
     r2degree current_grid_degree = bounds.first;
     for(int i = 0; i < grid_length_x; i++){ 
       current_grid_degree.second = bounds.first.second; // Reset y-coordinate for each x-coordinate
       for(int j = 0; j < grid_length_y; j++){
         
-        ostream << "G," << i << "," << j << ", " << current_grid_degree << std::endl;
+        ostream << "G," << i << "," << j << ", " << current_grid_degree << "\n";
 
         if (progress_bar) {
             int current_index = i * grid_length_y + j;
@@ -146,13 +152,13 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
                 all_scss_dimensions.push_back(1);
                 Uni_B1 res(B_induced);
                 res.slope_value = res.slope(slope_bounds);
+                vec<Uni_B1> single_factor = vec<Uni_B1>{res};
                 if(res.slope_value == INFINITY){
                     assert(false);
                     std::cerr << "Slope is infinite, consider passing a bound." << std::endl;
                 }
-
+                composition_factors.push_back(single_factor);
                 // slopes[i].push_back(res.slope_value);
-                to_stream(ostream, res);
 
             } else if ( B_induced.get_num_rows() == 0){
                 // Do nothing.
@@ -168,17 +174,32 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
                     grid_ind_dimensions.push_back(sub_B.get_num_rows());
                 }
                 auto subspaces = sparse_seperated_grassmannians<int>(max_dim);
-                composition_factors[i][j] = skyscraper_invariant_sum(sub_B_list, subspaces, slope_bounds);
+                skyscraper_invariant_sum_append(sub_B_list, composition_factors, subspaces, slope_bounds);
+            }
 
-                for(auto& hn_factor : composition_factors[i][j]){
-                    all_scss_dimensions.push_back(hn_factor.d1.get_num_rows());
-                    if(hn_factor.slope_value == INFINITY){
-                        std::cout << "  There are unbounded modules in the decomposition." << std::endl;
-                        std::cout << "  Consider passing a bound." << std::endl;
-                        assert(false);
-                    }
-                    // slopes[i].push_back(hn_factor.second);
-                    to_stream(ostream, hn_factor);
+            
+        }
+
+        // Recalculate the slopes for the filtration
+            
+        HN_factors filtration = k_merge(composition_factors);
+        recalculate_slopes(filtration);
+
+        for(auto& hn_factor : filtration){
+            int k = hn_factor.d1.get_num_rows();
+            all_scss_dimensions.push_back(k);
+            if(hn_factor.slope_value == INFINITY){
+                std::cout << "  There are unbounded modules in the decomposition." << std::endl;
+                std::cout << "  Consider passing a bound." << std::endl;
+                assert(false);
+            }
+            if(k ==1){
+                to_stream(ostream, hn_factor);
+            } else {
+                // Need to split into intervals:
+                auto intervals = split_into_intervals(hn_factor);
+                for(auto& interval : intervals){
+                    to_stream(ostream, interval);
                 }
             }
         }
@@ -356,8 +377,8 @@ bool essentially_equal(double a, double b, double relTol = 1e-9, double absTol =
 void compare_slopes_test(
     r2degree current_grid_degree,
     r2degree local_grid_degree,
-    const HN_factors& composition_factors,
-    const HN_factors& test_factors,
+    const vec<HN_factors>& composition_factors,
+    const vec<HN_factors>& test_factors,
     int i, int j, int k);
 
 template <typename Container>
@@ -367,7 +388,7 @@ void process_grid_cell(
     Container& indecomps,
     vec<pair<int>>& grid_locations,
     vec<Dynamic_HNF>& local_grid_row_data,
-    HN_factors& composition_factors,
+    vec<HN_factors>& composition_factors,
     vec<int>& grid_ind_dimensions,
     vec<int>& all_scss_dimensions,
     vec<vec<vec<SparseMatrix<int>>>>& subspaces,
@@ -380,8 +401,8 @@ void process_grid_cell(
 
     int k = -1;
     for(auto & M : indecomps){
-        HN_factors test_factors = HN_factors();
-        HN_factors copy_factors = HN_factors();
+        vec<HN_factors> test_factors = vec<HN_factors>();
+        vec<HN_factors> copy_factors =  vec<HN_factors>();
         k++;
         auto& local_grid_index = grid_locations[k];
         auto& local_x = local_grid_index.first;
@@ -464,9 +485,11 @@ void process_grid_cell(
                 shifted_summand.d1.set_all_generator_degrees(current_grid_degree);
                 shifted_summand.d1.column_reduction_graded();
                 shifted_summand.slope_value = slope;
-                composition_factors.emplace_back(shifted_summand);
+                HN_factors singleton = HN_factors();
+                singleton.emplace_back(std::move(shifted_summand));
+                composition_factors.emplace_back(singleton);
                 if(test){
-                    copy_factors.emplace_back(shifted_summand);
+                    copy_factors.emplace_back(singleton);
                 }
                 grid_ind_dimensions.push_back(1);
             } else {
@@ -491,7 +514,7 @@ void process_grid_cell(
     }
 };
 
-void recalculate_slopes(HN_factors& composition_factors);
+
 
 template<typename Container, typename Outputstream>
 void process_summands_smart_grid(aida::AIDA_functor& decomposer, 
@@ -530,9 +553,9 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     write_grid_metadata(ostream, grid_length_x, grid_length_y, lower_bound, upper_bound, grid_step, slope_bounds, show_info);
     
     // Will store the actual composition factors of the HNF at each grid point.
-    HN_factors composition_factors;
+    vec<HN_factors> composition_factors;
 
-    composition_factors.reserve(150); //TO-DO: replace by thickness of module.
+    composition_factors.reserve(100); //TO-DO: replace by thickness of module.
 
     // Will store where we are in the local grids:
     vec<pair<int>> grid_locations = vec<pair<int>>(indecomps.size(), {-1,-1});
@@ -553,7 +576,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
             // Then we need to check if we have crossed into a new grid-square in any local grid.    
             update_grid_locations_x(current_grid_degree, indecomps, grid_locations);
 
-            ostream << "G," << i << "," << j << ", " << current_grid_degree << std::endl;
+            ostream << "G," << i << "," << j << ", " << current_grid_degree << "\n";
             if (progress_bar) {
                 int points_processed = j * grid_length_x + i;
                 std::string name = "Grid point";
@@ -566,22 +589,27 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
 
                // Need to recalculate the slope values of the actual filtration from the factors.
 
-            std::sort(composition_factors.begin(), composition_factors.end(), 
-                    [](const Uni_B1& a, const Uni_B1& b) {
-                        return a.slope_value > b.slope_value;
-                    });
-            recalculate_slopes(composition_factors);
 
-            for(auto& hn_factor : composition_factors){
-                
-                
-                all_scss_dimensions.push_back(hn_factor.d1.get_num_rows());
+            HN_factors filtration = k_merge(composition_factors);
+            recalculate_slopes(filtration);
+
+            for(auto& hn_factor : filtration){
+                int k = hn_factor.d1.get_num_rows();
+                all_scss_dimensions.push_back(k);
                 if(hn_factor.slope_value == INFINITY){
                     std::cout << "  There are unbounded modules in the decomposition." << std::endl;
                     std::cout << "  Consider passing a bound." << std::endl;
                     assert(false);
                 }
-                to_stream(ostream, hn_factor);
+                if(k ==1){
+                    to_stream(ostream, hn_factor);
+                } else {
+                    // Need to split into intervals:
+                    auto intervals = split_into_intervals(hn_factor);
+                    for(auto& interval : intervals){
+                        to_stream(ostream, interval);
+                    }
+                }
             }
         }
     }
@@ -600,7 +628,8 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     bool show_indecomp_statistics, bool show_runtime_statistics, 
     bool dynamic_grid = true,
     bool is_decomposed = false,
-    const int& grid_length_x = 200, const int& grid_length_y = 200) {
+    const int& grid_length_x = 200, const int& grid_length_y = 200,
+    const int subspace_dim = -1) {
     
     
     if(is_decomposed){

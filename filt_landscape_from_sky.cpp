@@ -5,12 +5,12 @@
 using namespace hnf;
 
 int main(int argc, char* argv[]) {
-    if (argc > 6) {
+    if (argc > 4 || argc < 2) {
         std::cerr << "Usage: " << argv[0] << " [<input.sky>] [<theta>] [<k>] \n";
-        return 1;
+        // return 1;
     } 
     
-    std::string input_file = (argc >= 2) ? argv[1] : "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut.sky";
+    std::string input_file = (argc >= 2) ? argv[1] : "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_200x200_res.sky";
     
     double theta = (argc >= 3) ? std::stod(argv[2]) : 0.0;
     int k = (argc >= 4) ? std::stoi(argv[3]) : 1;
@@ -28,8 +28,6 @@ int main(int argc, char* argv[]) {
         output_file = (last_dot != std::string::npos) ? input_file.substr(0, last_dot) : input_file;
         output_file += "_landscape_" + theta_str + "_" + std::to_string(k) + ".txt";
     }
-    
-    
     
     try {
         hnf::GridData data = hnf::bars_from_sky(input_file);

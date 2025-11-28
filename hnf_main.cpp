@@ -2,252 +2,301 @@
 
 namespace fs = std::filesystem;
 
-int main(int argc, char** argv){
+struct ProgramConfig {
+    aida::AIDA_functor decomposer;
+    bool write_output = false;
+    bool diagonal_output = false;
+    bool show_indecomp_statistics = false;
+    bool show_runtime_statistics = false;
+    bool test_files = false;
+    bool is_decomposed = false;
+    bool dynamic_grid = true;
+    bool subdivision = false;
+    int grid_length_x = 200;
+    int grid_length_y = 200;
+    int grassmann_value = -1;
+    std::string output_string;
+};
 
-    
-    aida::AIDA_functor decomposer = aida::AIDA_functor();
-    
+struct FileInfo {
+    std::string matrix_path;
+    std::string input_directory;
+    std::string filename;
+    std::string file_without_extension;
+    std::string extension = ".sky";
+};
+
+void initialize_decomposer_config(aida::AIDA_functor& decomposer) {
     decomposer.config.exhaustive = false;
-    decomposer.config.brute_force = false;
     decomposer.config.sort = false;
     decomposer.config.sort_output = true;
     decomposer.config.alpha_hom = false;
     decomposer.config.progress = true;
-    bool write_output = false;
-    bool diagonal_output = false;
-
-    bool show_indecomp_statistics = false;
-    bool show_runtime_statistics = false;
     decomposer.config.show_info = true;
-
-    decomposer.config.compare_both = false; // Compares normal functioning and brute force at runtime, then also compares output.
-    // bool compare_time = false;
+    decomposer.config.compare_both = false;
     decomposer.config.exhaustive_test = false;
+    decomposer.config.save_base_change = false;
+    decomposer.config.turn_off_hom_optimisation = false;
+}
 
-    // bool compare_hom_internal = false; // Cannot be used with the functor right now.
-    bool test_files = false;
-    bool is_decomposed = false;
-
-    int grid_length_x = 200;
-    int grid_length_y = 200;
-
-    std::string input_directory;
-    std::string filename;
-    std::string matrix_path;
-    std::string output_string;
-    std::string output_file_path;
-
-    if (argc < 2) {
-        std::cerr << "No input file specified. Please provide an input file." << std::endl;
-        hnf::display_help();
-        std::cout << "Please provide options/arguments: ";
-        std::string input;
-        std::getline(std::cin, input);
-        std::vector<std::string> args;
-        args.push_back(argv[0]);
-        std::istringstream iss(input);
-        std::string token;
-        while (iss >> token) {
-            args.push_back(token);
-        }
-        argc = args.size();
-        argv = new char*[argc + 1];
-        for (size_t i = 0; i < args.size(); ++i) {
-            argv[i] = new char[args[i].size() + 1];
-            std::strcpy(argv[i], args[i].c_str());
-        }
-        argv[argc] = nullptr;
-        optind = 1; // Reset getopt
+bool handle_interactive_input(int& argc, char**& argv) {
+    std::cerr << "No input file specified. Please provide an input file." << std::endl;
+    hnf::display_help();
+    std::cout << "Please provide options/arguments: ";
+    
+    std::string input;
+    std::getline(std::cin, input);
+    
+    std::vector<std::string> args;
+    args.push_back(argv[0]);
+    std::istringstream iss(input);
+    std::string token;
+    while (iss >> token) {
+        args.push_back(token);
     }
+    
+    argc = args.size();
+    argv = new char*[argc + 1];
+    for (size_t i = 0; i < args.size(); ++i) {
+        argv[i] = new char[args[i].size() + 1];
+        std::strcpy(argv[i], args[i].c_str());
+    }
+    argv[argc] = nullptr;
+    optind = 1;
+    
+    return true;
+}
 
+bool parse_resolution(const std::string& res_arg, int& grid_x, int& grid_y) {
+    size_t comma_pos = res_arg.find(',');
+    if (comma_pos == std::string::npos) {
+        std::cerr << "Error: Resolution argument must be in the format 'x,y'." << std::endl;
+        return false;
+    }
+    grid_x = std::stoi(res_arg.substr(0, comma_pos));
+    grid_y = std::stoi(res_arg.substr(comma_pos + 1));
+    return true;
+}
+
+bool parse_command_line(int argc, char** argv, ProgramConfig& config) {
     static struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {"output", optional_argument, 0, 'o'},
-        {"bruteforce", no_argument, 0, 'b'},
         {"exhaustive", no_argument, 0, 'e'},
         {"statistics", no_argument, 0, 's'},
         {"runtime", no_argument, 0, 't'},
         {"progress", no_argument, 0, 'p'},
         {"basechange", no_argument, 0, 'c'},
         {"less_console", no_argument, 0, 'l'},
-        {"compare_b", no_argument, 0, 'm'},
-        {"compare_e", no_argument, 0, 'a'},
-        {"compare_hom", no_argument, 0, 'i'},
         {"no_hom_opt", no_argument, 0, 'j'},
-        {"no_col_sweep", no_argument, 0, 'w'},
         {"alpha", no_argument, 0, 'f'},
         {"test_files", no_argument, 0, 'x'},
         {"is_decomposed", no_argument, 0, 'd'},
         {"diagonal", no_argument, 0, 'g'},
         {"resolution", required_argument, 0, 'r'},
+        {"dynamic_grid", no_argument, 0, 'y'},
+        {"subdivision", no_argument, 0, 'u'},
+        {"grassmann", required_argument, 0, 'k'},
         {0, 0, 0, 0}
     };
-
+    
     int opt;
     int option_index = 0;
-
-    while ((opt = getopt_long(argc, argv, "ho::gbsetrpclmvaijwfxd", long_options, &option_index)) != -1) {
+    
+    while ((opt = getopt_long(argc, argv, "ho::gestrpclfjxdyk:u", long_options, &option_index)) != -1) {
         switch (opt) {
             case 'h':
                 hnf::display_help();
-                return 0;
+                return false;
             case 'v':
                 hnf::display_version();
-                return 0;
+                return false;
             case 'o':
-                write_output = true;
+                config.write_output = true;
                 if (optarg) {
-                    output_string = std::string(optarg);
+                    config.output_string = std::string(optarg);
                 } else if (optind < argc && argv[optind][0] != '-') {
-                    output_string = std::string(argv[optind]);
+                    config.output_string = std::string(argv[optind]);
                     optind++;
                 } else {
-                    output_string.clear(); // Set output_string to empty
+                    config.output_string.clear();
                 }
                 break;
-            case 'b':
-                decomposer.config.brute_force = true;
-                decomposer.config.exhaustive = true;
-                break;
             case 's':
-                show_indecomp_statistics = true;
+                config.show_indecomp_statistics = true;
                 break;
             case 'e':
-                decomposer.config.exhaustive = true;
+                config.decomposer.config.exhaustive = true;
                 break;
             case 't':
-                show_runtime_statistics = true;
+                config.show_runtime_statistics = true;
                 break;
             case 'r':
-                // Set resolution of grid
-                if (optarg) {
-                    std::string res_arg = std::string(optarg);
-                    size_t comma_pos = res_arg.find(',');
-                    if (comma_pos != std::string::npos) {
-                        grid_length_x = std::stoi(res_arg.substr(0, comma_pos));
-                        grid_length_y = std::stoi(res_arg.substr(comma_pos + 1));
-                    } else {
-                        std::cerr << "Error: Resolution argument must be in the format 'x,y'." << std::endl;
-                        return 1;
-                    }
-                } else {    
-                    std::cout << "Error: No resolution argument provided." << std::endl;
-                    return 1;
+                if (!optarg) {
+                    std::cerr << "Error: No resolution argument provided." << std::endl;
+                    return false;
+                }
+                if (!parse_resolution(optarg, config.grid_length_x, config.grid_length_y)) {
+                    return false;
                 }
                 break;
             case 'p':
-                decomposer.config.progress = false;
+                config.decomposer.config.progress = false;
                 break;
             case 'c':
-                decomposer.config.save_base_change = true;
+                config.decomposer.config.save_base_change = true;
                 break;
             case 'l':
-                decomposer.config.show_info = false;
-                break;
-            case 'm':
-                decomposer.config.compare_both = true;
-                break;
-            case 'a':
-                decomposer.config.exhaustive_test = true;
-                break;
-            case 'i':
-                decomposer.config.compare_hom = true;
+                config.decomposer.config.show_info = false;
                 break;
             case 'j':
-                decomposer.config.turn_off_hom_optimisation = true;
-                break;
-            case 'w':
-                decomposer.config.supress_col_sweep = true;
+                config.decomposer.config.turn_off_hom_optimisation = true;
                 break;
             case 'f':
-                decomposer.config.alpha_hom = true;
+                config.decomposer.config.alpha_hom = true;
                 break;
             case 'x':
-                test_files = true;
+                config.test_files = true;
                 break;
             case 'd':
-                is_decomposed = true;
+                config.is_decomposed = true;
                 std::cout << "Input file is assumed to be already decomposed." << std::endl;
                 break;
             case 'g':
-                diagonal_output = true;
+                config.diagonal_output = true;
+                break;
+            case 'y':
+                config.dynamic_grid = false;
+                break;
+            case 'u':
+                config.subdivision = true;
+                break;
+            case 'k':
+                if (!optarg) {
+                    std::cerr << "Error: --grassmann requires an integer argument." << std::endl;
+                    return false;
+                }
+                config.grassmann_value = std::stoi(optarg);
                 break;
             default:
-                return 1;
+                return false;
         }
-    }
-
-    std::string file_without_extension;
-    std::string extension = ".sky";
-
-
-    if (optind < argc) {
-        std::filesystem::path fs_path(argv[optind]);
-        if (fs_path.is_relative()) {
-            matrix_path = std::filesystem::current_path().string() + "/" + argv[optind];
-        } else {
-            matrix_path = argv[optind];
-        }
-        input_directory = fs_path.parent_path().string();
-        filename = fs_path.filename().string();
-        size_t dot_position = filename.find_last_of('.');
-        if (dot_position == std::string::npos) {
-            file_without_extension = filename;
-        } else {
-            file_without_extension = filename.substr(0, dot_position);
-        }
-    } else if (test_files) {
-        // Do nothing
-    } else {
-        fs::path cpp_path = fs::path(__FILE__).parent_path();
-        fs::path test_file_folder = cpp_path / "Persistence-Algebra/test_presentations";
-        fs::path ex1 = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut.scc";
-        fs::path ex_sum = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_100x100_res_cut.sccsum";
-        matrix_path = test_file_folder / ex_sum;
-        is_decomposed = true;
-        input_directory = test_file_folder.string();
-        filename = ex_sum.string();
-        size_t dot_position = filename.find_last_of('.');
-        file_without_extension = filename.substr(0, dot_position);
-        std::cout << "No input file specified. Running on test file: " << matrix_path << std::endl;
     }
     
-    std::ostringstream ostream;
-    if(!test_files){
-        std::ifstream istream(matrix_path);
-        if (!istream.is_open()) {
-                std::cerr << "Error: Could not open input file: " << matrix_path << std::endl;
-                return 0;
-        }
-        if(is_decomposed){
-            std::cout << "Running HNF on already decomposed input file: " + filename << std::endl;
-        } else {
-            std::cout << "First decomposing with AIDA, then computing HNF on " + filename << std::endl;
-        }
-         ostream << std::fixed << std::setprecision(10);
-        hnf::full_grid_induced_decomposition(decomposer, istream, ostream, show_indecomp_statistics, show_runtime_statistics, true, is_decomposed, grid_length_x, grid_length_y);
-         
-     } else {
-        // Run on some test files.
-     }
- 
+    return true;
+}
 
-     if(decomposer.config.save_base_change){
-         int total_row_ops = 0;
-         for(auto& base_change : decomposer.base_changes){
-            total_row_ops += base_change->performed_row_ops.size();
-         }
-         if(decomposer.config.show_info){
-             std::cout << "Basechange: Performed " << total_row_ops << " row operations in total." << std::endl;
-         }
-     }
-     
-     // aida::index num_indecomp = decomposer.cumulative_statistics.num_of_summands;
-     
-     if(write_output){
-         hnf::write_to_file(ostream, output_file_path, input_directory, file_without_extension, extension, output_string);
-     }
- 
-     return 0;
- } //main
+FileInfo resolve_input_file(int argc, char** argv, bool test_files, bool& is_decomposed) {
+    FileInfo file_info;
+    
+    if (optind < argc) {
+        std::filesystem::path fs_path(argv[optind]);
+        file_info.matrix_path = fs_path.is_relative() 
+            ? std::filesystem::current_path().string() + "/" + argv[optind]
+            : argv[optind];
+        file_info.input_directory = fs_path.parent_path().string();
+        file_info.filename = fs_path.filename().string();
+        
+        size_t dot_position = file_info.filename.find_last_of('.');
+        file_info.file_without_extension = (dot_position == std::string::npos) 
+            ? file_info.filename 
+            : file_info.filename.substr(0, dot_position);
+    } else if (test_files) {
+        // Do nothing - test files handled separately
+    } else {
+        // No file provided and not in test mode - use default test file
+        fs::path default_test_file = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_200x200_res.sccsum";
+        
+        file_info.matrix_path = default_test_file.string();
+        file_info.input_directory = default_test_file.parent_path().string();
+        file_info.filename = default_test_file.filename().string();
+        
+        size_t dot_position = file_info.filename.find_last_of('.');
+        file_info.file_without_extension = (dot_position == std::string::npos) 
+            ? file_info.filename 
+            : file_info.filename.substr(0, dot_position);
+        
+        is_decomposed = true;
+        std::cout << "No input file specified. Running on test file: " << file_info.matrix_path << std::endl;
+    }
+    
+    return file_info;
+}
+
+bool process_input_file(const FileInfo& file_info, ProgramConfig& config, std::ostringstream& ostream) {
+    std::ifstream istream(file_info.matrix_path);
+    if (!istream.is_open()) {
+        std::cerr << "Error: Could not open input file: " << file_info.matrix_path << std::endl;
+        return false;
+    }
+    
+    std::cout << (config.is_decomposed 
+        ? "Running HNF on already decomposed input file: " 
+        : "First decomposing with AIDA, then computing HNF on ") + file_info.filename << std::endl;
+    
+    ostream << std::fixed << std::setprecision(8);
+    hnf::full_grid_induced_decomposition(
+        config.decomposer, istream, ostream, 
+        config.show_indecomp_statistics, 
+        config.show_runtime_statistics, 
+        config.dynamic_grid, 
+        config.is_decomposed, 
+        config.grid_length_x, 
+        config.grid_length_y, 
+        config.grassmann_value
+    );
+    
+    return true;
+}
+
+void output_base_change_statistics(const ProgramConfig& config) {
+    if (!config.decomposer.config.save_base_change) return;
+    
+    int total_row_ops = 0;
+    for (auto& base_change : config.decomposer.base_changes) {
+        total_row_ops += base_change->performed_row_ops.size();
+    }
+    
+    if (config.decomposer.config.show_info) {
+        std::cout << "Basechange: Performed " << total_row_ops << " row operations in total." << std::endl;
+    }
+}
+
+void write_output(const std::ostringstream& ostream, const FileInfo& file_info, const std::string& output_string) {
+    std::string output_file_path;
+    hnf::write_to_file(ostream, output_file_path, file_info.input_directory, 
+        file_info.file_without_extension, file_info.extension, output_string);
+}
+
+int main(int argc, char** argv) {
+    ProgramConfig config;
+    initialize_decomposer_config(config.decomposer);
+    
+    if (argc < 2) {
+        if (!handle_interactive_input(argc, argv)) {
+            return 1;
+        }
+    }
+    
+    if (!parse_command_line(argc, argv, config)) {
+        return 0; // Help/version shown or error occurred
+    }
+    
+    FileInfo file_info = resolve_input_file(argc, argv, config.test_files, config.is_decomposed);
+    
+    if (!config.test_files) {
+        std::ostringstream ostream;
+        if (!process_input_file(file_info, config, ostream)) {
+            return 1;
+        }
+        
+        output_base_change_statistics(config);
+        
+        if (config.write_output) {
+            write_output(ostream, file_info, config.output_string);
+        }
+    }
+    
+    return 0;
+}

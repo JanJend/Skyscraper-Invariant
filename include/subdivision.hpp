@@ -17,7 +17,7 @@
 #include <CGAL/Arr_extended_dcel.h>
 #include <CGAL/Arr_naive_point_location.h>
 
-using namespace H5;
+// using namespace H5;
 // To-Do: Implement hdf5 output for the skyscraper invariant
 using namespace graded_linalg;
 
