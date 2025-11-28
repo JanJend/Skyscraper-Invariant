@@ -13,6 +13,7 @@ HN_factors split_into_intervals(Uni_B1& stable_module){
         subspace.row_degrees = pres.row_degrees;
         subspace.col_degrees = vec<r2degree>(1, pres.row_degrees[0]);
         R2Mat submodule_pres = pres.submodule_generated_by(subspace);
+        submodule_pres.minimize();
         intervals.emplace_back(Uni_B1(submodule_pres));
         intervals.back().slope_value = slope;
         pres.quotient_by(subspace);
@@ -97,6 +98,7 @@ vec<Uni_B1> get_slopes_at_dim(const R2Mat& X,
         assert(subspace.get_num_rows() == X.get_num_rows());
         assert(subspace.get_num_cols() == num_gens);
         R2Mat submodule_pres = X.submodule_generated_by(subspace);
+        submodule_pres.minimize();
         submodules.emplace_back(Uni_B1(submodule_pres));
         submodules.back().slope_value = submodules.back().slope(bounds);
         if(submodules.back().slope_value > scss.slope_value){
@@ -123,6 +125,7 @@ void find_scss_of_dim(const R2Mat& X,
         assert(subspace.get_num_rows() == X.get_num_rows());
         assert(subspace.get_num_cols() == num_gens);
         R2Mat submodule_pres = X.submodule_generated_by(subspace);
+        submodule_pres.minimize();
         Uni_B1 res(submodule_pres);
         res.slope_value = res.slope(bounds);
         if(res.slope_value > scss.slope_value){
@@ -143,7 +146,7 @@ Uni_B1 find_scss_bruteforce(const R2Mat& X,
     if(k == 1){
         // Nothing to do?
     } else {
-        assert(k < 7);
+        assert(k < 8);
         if(subspaces.size() < k){
             std::cerr << "Have not loaded enough subspaces" << std::endl;
             std::exit(1);

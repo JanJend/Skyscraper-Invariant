@@ -7,6 +7,9 @@ using namespace graded_linalg;
 
 void compute_random_uni_b1(std::filesystem::path output_path, const int optional_value = 10){
     using R2Matrix = R2GradedSparseMatrix<int>;
+    auto& gen = get_rng();
+    std::uniform_real_distribution<double> dist_01(0.0, 1.0);
+
     int dim = optional_value;
     int num_rel = std::pow(2, dim+3);
     int extra_fill_chance = std::pow(2, dim);
@@ -17,12 +20,12 @@ void compute_random_uni_b1(std::filesystem::path output_path, const int optional
     M.row_degrees = vec<r2degree>(M.get_num_rows(), {0.0, 0.0});
     // Set random col degrees in the box [0,1] x [0,1]
     for(int i = 0; i < M.get_num_cols(); i++){
-        M.col_degrees[i] = {static_cast<double>(rand()%100)/100.0, static_cast<double>(rand()%100)/100.0};
-        double fill_perc = static_cast<double>(rand()%100)/100.0;
-        if( fill_perc < 1/static_cast<double>(extra_fill_chance) ){
-            double fill_amount = static_cast<double>(rand()%100)/100.0;
+        M.col_degrees[i] = {dist_01(gen), dist_01(gen)};
+        double fill_perc = dist_01(gen);
+        if(fill_perc < 1/static_cast<double>(extra_fill_chance)){
+            double fill_amount = dist_01(gen);
             for(int j = 0; j < dim; j++){
-                if(static_cast<double>(rand()%100)/100.0 < fill_amount){
+                if(dist_01(gen) < fill_amount){
                     M.data[i].push_back(j);
                 }
             }
@@ -38,17 +41,14 @@ void compute_random_uni_b1(std::filesystem::path output_path, const int optional
         M.col_degrees.push_back( {0.0, 1.0} );
     }
     M.set_num_cols(M.data.size());
-
-    M.print_graded();
     M.sort_columns_lexicographically();
     M.minimize();
-    M.print_graded();
     std::ofstream output_file(output_path);
     if (!output_file.is_open()) {
         std::cerr << "Error: Unable to open output file " << output_path << std::endl;
         return;
     } else {
-        // M.to_stream_r2(output_file);
+        M.to_stream_r2(output_file);
         output_file.close();
         std::cout << "Random Uni B1 presentation computed and saved to: " << output_path << std::endl;
     }

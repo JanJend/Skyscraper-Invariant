@@ -66,7 +66,7 @@ include_directories(${AIDA_DIR}/include)
 include_directories(${AIDA_DIR}/src)
 
 # After project() declaration
-option(BUILD_EXP "Build only hnf_at_origin and large_induced_indecomposables" OFF)
+option(BUILD_EXP "Build only hnf_at_origin, random_uni_B1, and large_induced_indecomposables" OFF)
 
 if(NOT BUILD_EXP)
 
@@ -127,6 +127,10 @@ target_link_libraries(hnf_at_origin  ${Boost_TIMER_LIBRARY}
     ${Boost_CHRONO_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} )
 set_target_properties(hnf_at_origin PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+
+add_executable(random_uni_B1
+    random_uni_B1.cpp
+)
 
 if(BUILD_EXP)
     install(TARGETS large_induced_indecomposables hnf_at_origin

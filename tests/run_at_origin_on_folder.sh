@@ -14,7 +14,7 @@ for file in "$FOLDER"/*.scc; do
     echo "" >> "$OUTPUT"
     start=$(date +%s%N)
     echo '```' >> "$OUTPUT"
-    "$PROGRAM" "$file" "1.0,1.0" "true" >> "$OUTPUT" 2>&1
+    "$PROGRAM" "$file" "1.6,0.1" "true" >> "$OUTPUT" 2>&1
     echo '```' >> "$OUTPUT"
     end=$(date +%s%N)
     duration=$(awk "BEGIN {printf \"%.3f\", ($end - $start) / 1000000}")

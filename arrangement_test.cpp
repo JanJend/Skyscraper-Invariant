@@ -22,7 +22,6 @@ void get_arrangement(std::filesystem::path& input_path,
 
     // enlarging bounding box to see whole arrangement
     
-
     assert(M.x_grid.size() >= 2 && M.y_grid.size() >= 2);
     double cell_end_x = M.x_grid[1];
     double cell_end_y = M.y_grid[1];
@@ -31,9 +30,9 @@ void get_arrangement(std::filesystem::path& input_path,
     cell_boundary = bounding_box.second;
     r2degree range = bounding_box.second - bounding_box.first;
     r2degree padding = {0.2,0.2};
-    r2degree large_padding = {0.5, 1.2};
+    r2degree large_padding = {1.2, 1.2};
     cell_start = cell_start - large_padding;
-    cell_boundary = cell_boundary + padding;
+    cell_boundary = cell_boundary + large_padding;
     // cell_start = {-2, -2};
     // cell_boundary = {2, 2};
     std::cout << "Computing arrangement in the box: (" << cell_start.first << ", " << cell_start.second 
@@ -52,10 +51,10 @@ int main(int argc, char** argv) {
     std::string suffix;
     std::filesystem::path input_path;
 
-    if (argc < 2 || argc > 5) {
+    if (argc < 2 || argc > 3) {
         std::cerr << "Usage: " << argv[0] << " <file_path> [optional_value] \n";
         std::cerr << "  optional_value = 0 \n";
-        filepath = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_200x200_snapped_induced/candidates_for_diagram/4_1.scc";
+        filepath = "/home/wsljan/MP-Workspace/Skyscraper-Invariant/example_files/presentations/torus3_induced/2_0.scc";
         input_path = std::filesystem::path(filepath);
     } else {
         filepath = argv[1];

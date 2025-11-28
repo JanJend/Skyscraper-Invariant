@@ -385,6 +385,188 @@ Slope_subdivision compute_slope_subdivision(Uni_B1& res,
     return result;
 }
 
+void Slope_subdivision::export_to_svg(const std::string& filename,
+    double axes_origin_x,
+    double axes_origin_y) const {
+    // Compute bounding box
+    double min_x = std::numeric_limits<double>::max();
+    double min_y = std::numeric_limits<double>::max();
+    double max_x = std::numeric_limits<double>::lowest();
+    double max_y = std::numeric_limits<double>::lowest();
+    for (auto vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit) {
+        auto pt = vit->point();
+        double x = CGAL::to_double(pt.x());
+        double y = CGAL::to_double(pt.y());
+        min_x = std::min(min_x, x);
+        min_y = std::min(min_y, y);
+        max_x = std::max(max_x, x);
+        max_y = std::max(max_y, y);
+    }
+    double actual_min_x = min_x;
+    double actual_min_y = min_y;
+    double actual_max_x = max_x;
+    double actual_max_y = max_y;
+    
+    // Add 10% padding
+    double w = max_x - min_x;
+    double h = max_y - min_y;
+    min_x -= w * 0.1;
+    min_y -= h * 0.1;
+    max_x += w * 0.1;
+    max_y += h * 0.1;
+    w *= 1.2;
+    h *= 1.2;
+    
+    // Calculate aspect ratio and determine scaling factors
+    double aspect_ratio = w / h;
+    double scale_x = 1.0;
+    double scale_y = 1.0;
+    
+    if (aspect_ratio > 2.0) {
+        // Too wide - expand y
+        scale_y = aspect_ratio / 2.0;
+    } else if (aspect_ratio < 0.5) {
+        // Too tall - expand x
+        scale_x = aspect_ratio * 2.0;
+    }
+    
+    // Apply scaling to dimensions and bounds
+    double scaled_w = w * scale_x;
+    double scaled_h = h * scale_y;
+    double scaled_min_x = min_x * scale_x;
+    double scaled_min_y = min_y * scale_y;
+    double scaled_max_x = max_x * scale_x;
+    double scaled_max_y = max_y * scale_y;
+    double scaled_actual_min_x = actual_min_x * scale_x;
+    double scaled_actual_max_x = actual_max_x * scale_x;
+    double scaled_actual_min_y = actual_min_y * scale_y;
+    double scaled_actual_max_y = actual_max_y * scale_y;
+    double scaled_axes_origin_x = axes_origin_x * scale_x;
+    double scaled_axes_origin_y = axes_origin_y * scale_y;
+    
+    // Fixed pixel-based sizes
+    const double PIXEL_WIDTH = 800.0;
+    double pixels_per_unit = PIXEL_WIDTH / scaled_w;
+    double stroke = 2.0 / pixels_per_unit;
+    double tick_size = 10.0 / pixels_per_unit;
+    double font_size = 14.0 / pixels_per_unit;
+    double axis_stroke = 1.5 / pixels_per_unit;
 
+    std::ofstream svg_file(filename);
+    svg_file << "<svg xmlns='http://www.w3.org/2000/svg' viewBox='"
+            << scaled_min_x << " " << -scaled_min_y - scaled_h << " " << scaled_w << " " << scaled_h << "'>\n";
+    // Only apply y-flip
+    svg_file << "<g transform='scale(1, -1)'>\n";
+
+    // Draw faces with semi-transparent colors
+    std::vector<std::string> colors = {
+        "#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E2",
+        "#F8B195", "#F67280", "#C06C84", "#6C5B7B", "#355C7D", "#99B898", "#FECEA8", "#FF847C",
+        "#E84A5F", "#2A363B", "#A8E6CF", "#DCEDC1", "#FFD3B6", "#FFAAA5", "#AA96DA", "#FCBAD3",
+        "#FFFFD2", "#A8DADC", "#457B9D", "#1D3557", "#E63946", "#F1FAEE", "#A8E6CE", "#FFE156"
+    };
+    int color_idx = 0;
+
+    for (auto fit = arr.faces_begin(); fit != arr.faces_end(); ++fit) {
+        if (fit->is_unbounded()) continue;
+        auto ccb = fit->outer_ccb();
+        auto curr = ccb;
+        svg_file << "<polygon points='";
+        do {
+            auto pt = curr->source()->point();
+            double x = CGAL::to_double(pt.x()) * scale_x;
+            double y = CGAL::to_double(pt.y()) * scale_y;
+            svg_file << x << "," << y << " ";
+            ++curr;
+        } while (curr != ccb);
+        svg_file << "' fill='" << colors[color_idx % colors.size()]
+                << "' fill-opacity='0.3' stroke='none'/>\n";
+        color_idx++;
+    }
+
+    // Draw edges
+    for (auto eit = arr.edges_begin(); eit != arr.edges_end(); ++eit) {
+        auto curve = eit->curve();
+        auto src = curve.source();
+        auto tgt = curve.target();
+        double x1 = CGAL::to_double(src.x()) * scale_x;
+        double y1 = CGAL::to_double(src.y()) * scale_y;
+        double x2 = CGAL::to_double(tgt.x()) * scale_x;
+        double y2 = CGAL::to_double(tgt.y()) * scale_y;
+        svg_file << "<line x1='" << x1 << "' y1='" << y1
+                << "' x2='" << x2 << "' y2='" << y2
+                << "' stroke='black' stroke-width='" << stroke << "'/>\n";
+    }
+    
+    // Draw vertices
+    for (auto vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit) {
+        auto pt = vit->point();
+        double x = CGAL::to_double(pt.x()) * scale_x;
+        double y = CGAL::to_double(pt.y()) * scale_y;
+        svg_file << "<circle cx='" << x << "' cy='" << y
+                << "' r='" << stroke * 2 << "' fill='black'/>\n";
+    }
+
+    // Draw coordinate axes
+    std::string axis_color = "#5B7C99";
+    double axis_extension = scaled_w * 0.05;
+    
+    // X-axis
+    double x_axis_start = std::max(scaled_axes_origin_x, scaled_actual_min_x);
+    double x_axis_end = scaled_actual_max_x + axis_extension;
+    svg_file << "<line x1='" << x_axis_start << "' y1='" << scaled_axes_origin_y
+            << "' x2='" << x_axis_end << "' y2='" << scaled_axes_origin_y
+            << "' stroke='" << axis_color << "' stroke-width='" << axis_stroke << "'/>\n";
+
+    // Y-axis
+    double y_axis_start = std::max(scaled_axes_origin_y, scaled_actual_min_y);
+    double y_axis_end = scaled_actual_max_y + axis_extension;
+    svg_file << "<line x1='" << scaled_axes_origin_x << "' y1='" << y_axis_start
+            << "' x2='" << scaled_axes_origin_x << "' y2='" << y_axis_end
+            << "' stroke='" << axis_color << "' stroke-width='" << axis_stroke << "'/>\n";
+
+    // X-axis ticks and labels (labels show original unscaled coordinates)
+    int num_ticks = 3;
+    double x_tick_range = x_axis_end - x_axis_start;
+    double x_step = x_tick_range / num_ticks;
+    double unscaled_x_start = x_axis_start / scale_x;
+    double unscaled_x_step = x_step / scale_x;
+    for (int i = 0; i <= num_ticks; ++i) {
+        double x_val_scaled = x_axis_start + i * x_step;
+        double x_val_unscaled = unscaled_x_start + i * unscaled_x_step;
+        svg_file << "<line x1='" << x_val_scaled << "' y1='" << (scaled_axes_origin_y - tick_size)
+                << "' x2='" << x_val_scaled << "' y2='" << (scaled_axes_origin_y + tick_size)
+                << "' stroke='" << axis_color << "' stroke-width='" << axis_stroke << "'/>\n";
+        double text_y = scaled_axes_origin_y - tick_size * 2.5;  // Changed: minus instead of plus
+        svg_file << "<text x='" << x_val_scaled << "' y='" << text_y
+                << "' font-size='" << font_size << "' font-family='Arial, sans-serif' "
+                << "text-anchor='middle' fill='" << axis_color
+                << "' transform='scale(1, -1)' transform-origin='" << x_val_scaled << " " << text_y << "'>"
+                << std::fixed << std::setprecision(2) << x_val_unscaled << "</text>\n";
+    }
+
+    // Y-axis ticks and labels (labels show original unscaled coordinates)
+    double y_tick_range = y_axis_end - y_axis_start;
+    double y_step = y_tick_range / num_ticks;
+    double unscaled_y_start = y_axis_start / scale_y;
+    double unscaled_y_step = y_step / scale_y;
+    for (int i = 0; i <= num_ticks; ++i) {
+        double y_val_scaled = y_axis_start + i * y_step;
+        double y_val_unscaled = unscaled_y_start + i * unscaled_y_step;
+        svg_file << "<line x1='" << (scaled_axes_origin_x - tick_size) << "' y1='" << y_val_scaled
+                << "' x2='" << (scaled_axes_origin_x + tick_size) << "' y2='" << y_val_scaled
+                << "' stroke='" << axis_color << "' stroke-width='" << axis_stroke << "'/>\n";
+        double text_x = scaled_axes_origin_x - tick_size * 2.5;  // Changed: minus instead of plus
+        svg_file << "<text x='" << text_x << "' y='" << y_val_scaled
+                << "' font-size='" << font_size << "' font-family='Arial, sans-serif' "
+                << "text-anchor='end' fill='" << axis_color  // Changed: 'end' instead of 'start'
+                << "' transform='scale(1, -1)' transform-origin='" << text_x << " " << y_val_scaled << "'>"
+                << std::fixed << std::setprecision(2) << y_val_unscaled << "</text>\n";
+    }
+
+    svg_file << "</g>\n</svg>";
+    svg_file.close();
+    std::cout << "SVG exported to " << filename << std::endl;
+}
 
 } // namespace hnf

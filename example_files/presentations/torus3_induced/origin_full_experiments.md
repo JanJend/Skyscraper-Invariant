@@ -1,11 +1,10 @@
 # Experiment Results
 
-Generated on: Fri Nov 28 23:14:43 GMT 2025
+Generated on: Fri Nov 28 23:14:19 GMT 2025
 
 ## 2_0.scc
 
 ```
- Filtered out all subspaces of dimensions: 
 Slope: 1.49234 Module: 
 scc2020
 2
@@ -31,12 +30,11 @@ scc2020
 0.22811154680550483 -0.41117100000000001 ;
 ```
 
-**Execution time:** 1.943ms
+**Execution time:** 2.155ms
 
 ## 2_1.scc
 
 ```
- Filtered out all subspaces of dimensions: 
 Slope: 1.49585 Module: 
 scc2020
 2
@@ -61,12 +59,11 @@ scc2020
 0.22811154680550483 -0.40487000000000001 ;
 ```
 
-**Execution time:** 2.895ms
+**Execution time:** 1.880ms
 
 ## 2_2.scc
 
 ```
- Filtered out all subspaces of dimensions: 
 Slope: 1.5014 Module: 
 scc2020
 2
@@ -90,12 +87,11 @@ scc2020
 0.22811154680550483 -0.39506700000000000 ;
 ```
 
-**Execution time:** 2.031ms
+**Execution time:** 2.498ms
 
 ## 2_6.scc
 
 ```
- Filtered out all subspaces of dimensions: 
 Slope: 1.58323 Module: 
 scc2020
 2
@@ -121,13 +117,11 @@ scc2020
 0.23034527095102256 -0.47004099999999999 ;
 ```
 
-**Execution time:** 2.087ms
+**Execution time:** 2.024ms
 
 ## 3_0.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 1.68363 Module: 
 scc2020
 2
@@ -162,13 +156,11 @@ scc2020
 0.23613762853524636 -0.41117100000000001 ;
 ```
 
-**Execution time:** 2.225ms
+**Execution time:** 2.200ms
 
 ## 3_8.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 1.7071 Module: 
 scc2020
 2
@@ -205,13 +197,11 @@ scc2020
 0.24392915990405917 -0.41281699999999999 ;
 ```
 
-**Execution time:** 2.968ms
+**Execution time:** 2.469ms
 
 ## 3_9.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 1.69597 Module: 
 scc2020
 2
@@ -245,14 +235,11 @@ scc2020
 0.24529085347908913 -0.42556899999999998 ;
 ```
 
-**Execution time:** 2.923ms
+**Execution time:** 2.186ms
 
 ## 4_0.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 1.72146 Module: 
 scc2020
 2
@@ -295,14 +282,11 @@ scc2020
 0.24724936346176912 -0.41057800000000000 ;
 ```
 
-**Execution time:** 4.243ms
+**Execution time:** 4.326ms
 
 ## 4_9.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 2.06666 Module: 
 scc2020
 2
@@ -347,15 +331,11 @@ scc2020
 0.31754299334405806 -0.42405900000000002 ;
 ```
 
-**Execution time:** -547.636ms
+**Execution time:** 4.577ms
 
 ## 5_0.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 3.37695 Module: 
 scc2020
 2
@@ -410,15 +390,11 @@ scc2020
 0.33534385444532905 -0.42565999999999998 ;
 ```
 
-**Execution time:** 19.097ms
+**Execution time:** 18.761ms
 
 ## 5_1.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 2.77578 Module: 
 scc2020
 2
@@ -474,16 +450,11 @@ scc2020
 0.37787165239734505 -0.44138300000000003 ;
 ```
 
-**Execution time:** 19.887ms
+**Execution time:** 18.896ms
 
 ## 6_0.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 5.68911 Module: 
 scc2020
 2
@@ -560,16 +531,11 @@ scc2020
 0.44046964155830298 -0.50118600000000002 ;
 ```
 
-**Execution time:** 230.435ms
+**Execution time:** 224.623ms
 
 ## 6_4.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 9.6372 Module: 
 scc2020
 2
@@ -643,16 +609,11 @@ scc2020
 0.44901424839391241 -0.47338799999999998 ;
 ```
 
-**Execution time:** 226.097ms
+**Execution time:** 221.210ms
 
 ## 6_5.scc
 
 ```
- Filtered out all subspaces of dimensions: 6 
- Filtered out all subspaces of dimensions: 4 5 
- Filtered out all subspaces of dimensions: 4 
- Filtered out all subspaces of dimensions: 2 3 
- Filtered out all subspaces of dimensions: 
 Slope: 34.083 Module: 
 scc2020
 2
@@ -709,16 +670,11 @@ scc2020
 0.45047444019916383 -0.41167799999999999 ;
 ```
 
-**Execution time:** 107.059ms
+**Execution time:** 111.901ms
 
 ## 6_8.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 9.89466 Module: 
 scc2020
 2
@@ -792,14 +748,11 @@ scc2020
 0.45102452725267611 -0.47338799999999998 ;
 ```
 
-**Execution time:** 216.762ms
+**Execution time:** 225.124ms
 
 ## 6_9.scc
 
 ```
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 5.64237 Module: 
 scc2020
 2
@@ -869,16 +822,12 @@ scc2020
 0.45349662245765410 -0.50353499999999995 ;
 ```
 
-**Execution time:** 231.241ms
+**Execution time:** 247.156ms
 
 ## 7_0.scc
 
 ```
   Warning: Computing HNF for a module of dimension 7
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 7.75035 Module: 
 scc2020
 2
@@ -953,17 +902,12 @@ scc2020
 0.45557071447608433 -0.49580700000000000 ;
 ```
 
-**Execution time:** 2648.485ms
+**Execution time:** 2796.533ms
 
 ## 7_2.scc
 
 ```
   Warning: Computing HNF for a module of dimension 7
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
- Filtered out all subspaces of dimensions: 
 Slope: 7.32624 Module: 
 scc2020
 2
@@ -1050,5 +994,5 @@ scc2020
 0.46040869967291015 -0.50353499999999995 ;
 ```
 
-**Execution time:** 2758.541ms
+**Execution time:** 2667.634ms
 
