@@ -29,6 +29,9 @@ int get_diagonal_index(int i, int j, const GridData& data);
 std::vector<std::vector<std::vector<double>>> compute_landscape(const GridData& data, 
                       const double& theta, const int& k);
 
+std::vector<std::vector<std::vector<double>>> compute_difference_landscape(const GridData& data, 
+                      const double& theta, const double& theta_prime,  const int& k);                   
+
 } // namespace hnf
 
 #endif // LANDSCAPE_HPP

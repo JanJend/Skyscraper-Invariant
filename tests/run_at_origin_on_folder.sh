@@ -1,7 +1,7 @@
 #!/bin/sh
 FOLDER="${1:-.}"
 PROGRAM="/home/wsljan/MP-Workspace/Skyscraper-Invariant/build/hnf_at_origin"
-OUTPUT="$FOLDER/origin_optimised_experiments.md"
+OUTPUT="$FOLDER/origin_opt_experiments.md"
 echo "# Experiment Results" > "$OUTPUT"
 echo "" >> "$OUTPUT"
 echo "Generated on: $(date)" >> "$OUTPUT"

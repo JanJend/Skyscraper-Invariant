@@ -27,6 +27,7 @@ struct FileInfo {
 };
 
 void initialize_decomposer_config(aida::AIDA_functor& decomposer) {
+    decomposer.config.brute_force = false; // There is currently a bug in aida when this is false.
     decomposer.config.exhaustive = false;
     decomposer.config.sort = false;
     decomposer.config.sort_output = true;
@@ -104,7 +105,7 @@ bool parse_command_line(int argc, char** argv, ProgramConfig& config) {
     int opt;
     int option_index = 0;
     
-    while ((opt = getopt_long(argc, argv, "ho::gestrpclfjxdyk:u", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "ho::gestr:pclfjxdyk:u", long_options, &option_index)) != -1) {
         switch (opt) {
             case 'h':
                 hnf::display_help();

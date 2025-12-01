@@ -552,6 +552,8 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     auto [lower_bound, upper_bound, grid_step, slope_bounds] = compute_bounds_and_grid(indecomps, first_ind_dimensions, grid_length_x, grid_length_y);
     write_grid_metadata(ostream, grid_length_x, grid_length_y, lower_bound, upper_bound, grid_step, slope_bounds, show_info);
     
+    double max_slope = grid_length_x*grid_length_y; // If the slope is normalised, than one pixel will have this slope.
+
     // Will store the actual composition factors of the HNF at each grid point.
     vec<HN_factors> composition_factors;
 
@@ -632,6 +634,7 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     const int subspace_dim = -1) {
     
     
+
     if(is_decomposed){
         vec<R2Mat> matrices;
         graded_linalg::read_sccsum(matrices, istream);

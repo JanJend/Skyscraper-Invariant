@@ -18,7 +18,7 @@ void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres,
     pres.sort_columns_lexicographically();
     pres.compute_col_batches();
     bool interval_enabled = true;
-    int interval = 5;
+    int interval = 20;
     int pause_counter_x = interval;
     int pause_counter_y = interval;
     bool pause = false;

@@ -188,4 +188,81 @@ std::vector<std::vector<std::vector<double>>> compute_landscape(const GridData& 
     return landscapes;
 }
 
+std::vector<std::vector<std::vector<double>>> compute_difference_landscape(const GridData& data, 
+                      const double& theta,
+                      const double& theta_prime, 
+                     const int& k){
+    assert(theta_prime <= theta);
+    // Initialize landscape array
+    std::vector<std::vector<std::vector<double>>> landscapes(k, std::vector<std::vector<double>>(data.n_x, std::vector<double>(data.n_y, 0.0)));
+    std::vector<std::vector<std::vector<double>>> landscapes_copy(k, std::vector<std::vector<double>>(data.n_x, std::vector<double>(data.n_y, 0.0)));
+    // Process each grid point
+    for (int i = 0; i < data.n_x; i++) {
+        for (int j = 0; j < data.n_y; j++) {
+            auto bars = data.bars[i][j];
+            auto bars_copy = bars;
+            // Filter out bars with theta < theta_min
+            bars.erase(std::remove_if(bars.begin(), bars.end(),
+                    [theta](const Bar& bar) { return bar.theta < theta; }),
+                    bars.end());
+            // Filter out bars with theta < theta_prime
+            bars_copy.erase(std::remove_if(bars_copy.begin(), bars_copy.end(),
+                    [theta_prime](const Bar& bar) { return bar.theta < theta_prime; }),
+                    bars_copy.end());
+            if (bars.empty()) {
+                continue;
+            }
+            
+            std::sort(bars.begin(), bars.end(),
+                    [](const Bar& a, const Bar& b) { return a.length > b.length; });
+            std::sort(bars_copy.begin(), bars_copy.end(),
+                    [](const Bar& a, const Bar& b) { return a.length > b.length; });
+
+            // Process each k value
+            for (int k_idx = 1; k_idx <= std::min(k, static_cast<int>(bars.size())); k_idx++) {
+                const Bar& chosen = bars[k_idx - 1];
+                double length = chosen.length;
+                double d = length / 2.0;
+                
+                // Update landscape along the diagonal
+                for (int t = 0; i + t < data.n_x && j + t < data.n_y; t++) {
+                    double value = std::max(0.0, d - std::abs(d - t * data.step_x));
+                    if (value > landscapes[k_idx - 1][i + t][j + t]) {
+                        landscapes[k_idx - 1][i + t][j + t] = value;
+                    }
+                    if(t > 0 && value == 0.0){
+                        break;
+                    }
+                }
+            }
+            // Now compute the landscape with theta_prime filtered bars
+            for (int k_idx = 1; k_idx <= std::min(k, static_cast<int>(bars_copy.size())); k_idx++) {
+                const Bar& chosen = bars_copy[k_idx - 1];
+                double length = chosen.length;      
+                double d = length / 2.0;
+                // Update landscape along the diagonal
+                for (int t = 0; i + t < data.n_x && j + t < data.n_y; t++) {
+                    double value = std::max(0.0, d - std::abs(d - t * data.step_x));
+                    if (value > landscapes_copy[k_idx - 1][i + t][j + t]) {
+                        landscapes_copy[k_idx - 1][i + t][j + t] = value;
+                    }
+                    if(t > 0 && value == 0.0){
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Compute difference
+    for(int k_idx =0; k_idx < k; k_idx++){
+        for(int i =0; i < data.n_x; i++){
+            for(int j =0; j < data.n_y; j++){
+                assert(landscapes_copy[k_idx][i][j] >= landscapes[k_idx][i][j]);
+                landscapes_copy[k_idx][i][j] -= landscapes[k_idx][i][j];
+            }
+        }
+    }
+    return landscapes_copy;
+}
+
 } // namespace hnf
