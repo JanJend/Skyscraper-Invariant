@@ -30,10 +30,12 @@ int main(int argc, char* argv[]) {
         std::ostringstream theta_stream;
         theta_stream << std::fixed << std::setprecision(2) << theta;
         std::string theta_str = theta_stream.str();
-        
+        std::ostringstream theta_prime_stream;
+        theta_prime_stream << std::fixed << std::setprecision(2) << theta_prime;
+        std::string theta_prime_str = theta_prime_stream.str();
         size_t last_dot = input_file.find_last_of('.');
         output_file = (last_dot != std::string::npos) ? input_file.substr(0, last_dot) : input_file;
-        output_file += "_landscape_" + theta_str + (diff ? "_diff" + std::to_string(theta_prime) : "") + ".png";
+        output_file += "_landscape_" + theta_str + (diff ? "_diff" + theta_prime_str : "") + ".png";
     }
     
     try {
