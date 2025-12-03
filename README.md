@@ -16,7 +16,7 @@ The Skyscraper invariant is a filtration of the classical rank invariant introdu
 - `arrangement_test`: Tests arrangement computations
 - `hnf_at_origin`: Computes indecomposables at the origin
 - `large_induced_indecomposables`: Extracts large induced indecomposables
-- `random_uni_B1`: Generates random uni-B1 modules
+- `random_uni_B1`: Generates random uniquely generated modules
 
 ## Dependencies
 
@@ -25,7 +25,7 @@ The Skyscraper invariant is a filtration of the classical rank invariant introdu
 - **[AIDA](https://github.com/JanJend/AIDA)** - Must be built and installed as a library
 - **[Persistence-Algebra](https://github.com/JanJend/Persistence-Algebra)** - Header-only library
 - **Boost** (timer, chrono, system components)
-- **HDF5** (C++ components)
+- **HDF5** (in the near future)
 - **CGAL**
 
 ## Installation
@@ -320,14 +320,12 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 ## Credits
 
 **Developed at:**
-- **TU Graz** 
-- **University of Oxford**
 
 **Theoretical development:**
-- Ideas co-developed with **Marc Fersztand**
+- anonymous
 
 **Code implementation:**
-- Jan Jendrysiak
+- anonymous
 
 **Dependencies:**
 - [AIDA](https://github.com/JanJend/AIDA) - Persistence module decomposition
@@ -348,4 +346,4 @@ If you use this software in your research, please cite:
 
 For issues, questions, or contributions:
 - Open an issue on the project repository
-- Contact: [jendrysiak@tugraz.at]
+- Contact: anonymous

@@ -234,9 +234,10 @@ bool process_input_file(const FileInfo& file_info, ProgramConfig& config, std::o
     
     std::cout << (config.is_decomposed 
         ? "Running HNF on already decomposed input file: " 
-        : "First decomposing with AIDA, then computing HNF on ") + file_info.filename << std::endl;
+        : "First decomposing with AIDA.") + file_info.filename << std::endl;
     
     ostream << std::fixed << std::setprecision(8);
+    std::cout << "Computing HNF decomposition over " << config.grid_length_x << "x" << config.grid_length_y << " grid." << std::endl;
     hnf::full_grid_induced_decomposition(
         config.decomposer, istream, ostream, 
         config.show_indecomp_statistics, 

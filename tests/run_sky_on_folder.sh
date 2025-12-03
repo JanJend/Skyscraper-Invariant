@@ -2,7 +2,7 @@
 
 FOLDER="${1:-.}"  # Use provided folder or current directory
 PROGRAM="/home/wsljan/MP-Workspace/Skyscraper-Invariant/build/hnf_main"
-OUTPUT="$FOLDER/sky_fullgrid_experiments.md"
+OUTPUT="$FOLDER/sky_fullgrid_50_experiments.md"
 
 # Clear/create the output file
 echo "# Experiment Results" > "$OUTPUT"
@@ -16,7 +16,7 @@ for file in "$FOLDER"/*.scc "$FOLDER"/*.firep; do
     echo "## $(basename "$file")" >> "$OUTPUT"
     echo "" >> "$OUTPUT"
     start=$(date +%s.%N)
-    timeout 10m "$PROGRAM" "$file" -p -y >> "$OUTPUT" 2>&1
+    timeout 10m "$PROGRAM" "$file" -p -y -r50,50 >> "$OUTPUT" 2>&1
     exit_code=$?
     end=$(date +%s.%N)
     duration=$(echo "$end - $start" | bc)
