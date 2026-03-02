@@ -27,7 +27,7 @@ struct FileInfo {
 };
 
 void initialize_decomposer_config(aida::AIDA_functor& decomposer) {
-    decomposer.config.brute_force = false; // There is currently a bug in aida when this is false.
+    decomposer.config.brute_force = false; // There is currently sometimes a bug in aida when this is false.
     decomposer.config.exhaustive = false;
     decomposer.config.sort = false;
     decomposer.config.sort_output = true;
