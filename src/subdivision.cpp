@@ -387,13 +387,18 @@ Slope_subdivision compute_slope_subdivision(Uni_B1& res,
 
 void Slope_subdivision::export_to_svg(const std::string& filename,
     double axes_origin_x,
-    double axes_origin_y) const {
-    // Compute bounding box
+    double axes_origin_y,
+    const std::pair<double, double>& bounding_lower == std::make_pair(0.0, 0.0),
+    const std::pair<double, double>& bounding_upper == std::make_pair(0.0, 0.0)) const {
+
     double min_x = std::numeric_limits<double>::max();
     double min_y = std::numeric_limits<double>::max();
     double max_x = std::numeric_limits<double>::lowest();
     double max_y = std::numeric_limits<double>::lowest();
-    for (auto vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit) {
+
+    if(bounding_upper.first <= bounding_lower.first || bounding_upper.second <= bounding_lower.second){
+        // Compute bounding box from arrangement vertices
+        for (auto vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit) {
         auto pt = vit->point();
         double x = CGAL::to_double(pt.x());
         double y = CGAL::to_double(pt.y());
@@ -401,7 +406,13 @@ void Slope_subdivision::export_to_svg(const std::string& filename,
         min_y = std::min(min_y, y);
         max_x = std::max(max_x, x);
         max_y = std::max(max_y, y);
+    } else {
+        min_x = bounding_lower.first;
+        min_y = bounding_lower.second;
+        max_x = bounding_upper.first;
+        max_y = bounding_upper.second;
     }
+    
     double actual_min_x = min_x;
     double actual_min_y = min_y;
     double actual_max_x = max_x;
@@ -447,10 +458,10 @@ void Slope_subdivision::export_to_svg(const std::string& filename,
     // Fixed pixel-based sizes
     const double PIXEL_WIDTH = 800.0;
     double pixels_per_unit = PIXEL_WIDTH / scaled_w;
-    double stroke = 2.0 / pixels_per_unit;
-    double tick_size = 10.0 / pixels_per_unit;
-    double font_size = 14.0 / pixels_per_unit;
-    double axis_stroke = 1.5 / pixels_per_unit;
+    double stroke = 1.0 / pixels_per_unit;
+    double tick_size = 5.0 / pixels_per_unit;
+    double font_size = 8.0 / pixels_per_unit;
+    double axis_stroke = 0.7 / pixels_per_unit;
 
     std::ofstream svg_file(filename);
     svg_file << "<svg xmlns='http://www.w3.org/2000/svg' viewBox='"
