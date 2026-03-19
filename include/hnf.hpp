@@ -7,10 +7,10 @@
 #include "hnf_at.hpp"
 #include <unistd.h>
 #include <getopt.h>
-#include <H5Cpp.h>
+// #include <H5Cpp.h> For new better hdf5 output
 
 
-using namespace H5;
+// using namespace H5; For new version
 // To-Do: Implement hdf5 output for the skyscraper invariant
 using namespace graded_linalg;
 

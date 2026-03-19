@@ -15,8 +15,8 @@ if(NOT AIDA_LIBRARY)
 endif()
 # Find Boost
 find_package(Boost REQUIRED COMPONENTS timer chrono system)
-#Find hdf5
-find_package(HDF5 REQUIRED COMPONENTS CXX)
+#Find hdf5 (for new version)
+# find_package(HDF5 REQUIRED COMPONENTS CXX)
 # Find CGAL
 find_package(CGAL REQUIRED)
 
@@ -45,7 +45,7 @@ set(CMAKE_DEBUG_POSTFIX "_debug")
 
 # Change these paths to wherevery AIDA and Persistence-Algebra are.
 set(AIDA_DIR "${CMAKE_SOURCE_DIR}/../AIDA" CACHE PATH "Path to AIDA directory")
-set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra/include" CACHE PATH "Path to Persistence-Algebra directory")
+set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra/" CACHE PATH "Path to Persistence-Algebra directory")
 
 # Verify that external dependencies exist
 if(NOT EXISTS "${AIDA_DIR}/include/aida_interface.hpp")
@@ -60,7 +60,7 @@ endif()
 include_directories(include)
 include_directories(${PERSISTENCE_ALGEBRA_DIR}/include)
 include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${HDF5_INCLUDE_DIRS})
+# include_directories(${HDF5_INCLUDE_DIRS})
 include_directories(${CGAL_INCLUDE_DIRS})
 include_directories(${AIDA_DIR}/include)
 include_directories(${AIDA_DIR}/src)
@@ -80,7 +80,7 @@ if(NOT BUILD_EXP)
 
     target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_TIMER_LIBRARY}
         ${Boost_CHRONO_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY} ${HDF5_LIBRARIES} CGAL::CGAL)
+        ${Boost_SYSTEM_LIBRARY} CGAL::CGAL)
     set_target_properties(hnf_main PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
     # Makes filtered landscapes from .sky files
@@ -105,7 +105,7 @@ if(NOT BUILD_EXP)
         src/uni_b1.cpp 
         arrangement_test.cpp
     )
-    target_link_libraries(arrangement_test ${AIDA_LIBRARY} ${Boost_LIBRARIES} ${HDF5_LIBRARIES} CGAL::CGAL)
+    target_link_libraries(arrangement_test ${AIDA_LIBRARY} ${Boost_LIBRARIES} CGAL::CGAL)
     set_target_properties(arrangement_test PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 endif()
 

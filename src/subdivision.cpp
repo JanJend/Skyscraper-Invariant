@@ -388,8 +388,8 @@ Slope_subdivision compute_slope_subdivision(Uni_B1& res,
 void Slope_subdivision::export_to_svg(const std::string& filename,
     double axes_origin_x,
     double axes_origin_y,
-    const std::pair<double, double>& bounding_lower == std::make_pair(0.0, 0.0),
-    const std::pair<double, double>& bounding_upper == std::make_pair(0.0, 0.0)) const {
+    const std::pair<double, double>& bounding_lower,
+    const std::pair<double, double>& bounding_upper) const {
 
     double min_x = std::numeric_limits<double>::max();
     double min_y = std::numeric_limits<double>::max();
@@ -399,13 +399,14 @@ void Slope_subdivision::export_to_svg(const std::string& filename,
     if(bounding_upper.first <= bounding_lower.first || bounding_upper.second <= bounding_lower.second){
         // Compute bounding box from arrangement vertices
         for (auto vit = arr.vertices_begin(); vit != arr.vertices_end(); ++vit) {
-        auto pt = vit->point();
-        double x = CGAL::to_double(pt.x());
-        double y = CGAL::to_double(pt.y());
-        min_x = std::min(min_x, x);
-        min_y = std::min(min_y, y);
-        max_x = std::max(max_x, x);
-        max_y = std::max(max_y, y);
+            auto pt = vit->point();
+            double x = CGAL::to_double(pt.x());
+            double y = CGAL::to_double(pt.y());
+            min_x = std::min(min_x, x);
+            min_y = std::min(min_y, y);
+            max_x = std::max(max_x, x);
+            max_y = std::max(max_y, y);
+        }
     } else {
         min_x = bounding_lower.first;
         min_y = bounding_lower.second;

@@ -101,7 +101,9 @@ struct Slope_subdivision {
 
     void export_to_svg(const std::string& filename, 
         double axes_origin_x = 0.0, 
-        double axes_origin_y = 0.0) const;
+        double axes_origin_y = 0.0,
+        const std::pair<double, double>& bounding_lower = std::make_pair(0.0, 0.0),
+        const std::pair<double, double>& bounding_upper = std::make_pair(0.0, 0.0)) const;
 };
 
 Slope_subdivision compute_slope_subdivision(Uni_B1& res, 
