@@ -471,10 +471,14 @@ void Slope_subdivision::export_to_svg(const std::string& filename,
 
     // Draw faces with semi-transparent colors
     std::vector<std::string> colors = {
-        "#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E2",
-        "#F8B195", "#F67280", "#C06C84", "#6C5B7B", "#355C7D", "#99B898", "#FECEA8", "#FF847C",
-        "#E84A5F", "#2A363B", "#A8E6CF", "#DCEDC1", "#FFD3B6", "#FFAAA5", "#AA96DA", "#FCBAD3",
-        "#FFFFD2", "#A8DADC", "#457B9D", "#1D3557", "#E63946", "#F1FAEE", "#A8E6CE", "#FFE156"
+    "#1D1DA4", "#CE1682", "#5F93DD", "#921092",
+    "#C6107A", "#E2368C", "#1A50BB", "#DC3BB4",
+    "#247BF3", "#7C11A0", "#97B7D7", "#460E62",
+    "#620E15", "#57040B", "#B7D1EA", "#CD7DC7",
+    "#3B6CCE", "#C81CAC", "#AAB8E2", "#1C56C8",
+    "#CFE0F1", "#537ED4", "#EAB7D9", "#CCE0F4",
+    "#8B0A3A", "#2B0A5E", "#6B2FA0", "#D94FA0",
+    "#4A7FD4", "#C0D4F0", "#A020A0", "#3D1A6E"
     };
     int color_idx = 0;
 
