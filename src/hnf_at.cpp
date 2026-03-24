@@ -22,7 +22,25 @@ HN_factors split_into_intervals(Uni_B1& stable_module){
     return intervals;
 }
 
+vec<Uni_B1> sort_merge(vec<HN_factors>& factors_from_indecomp){
+    vec<Uni_B1> result;
+    for(auto& factors : factors_from_indecomp){
+        for(auto& factor : factors){
+            result.push_back(std::move(factor));
+        }
+    }
+    std::sort(result.begin(), result.end(), slope_comparator());
+    return result;
+}
+
 vec<Uni_B1>  k_merge(vec<vec<Uni_B1>>& factors_from_indecomp){
+    for(auto& factors : factors_from_indecomp){
+        for(auto& factor : factors){
+            if(factor.slope_value == 0){
+                std::cout << "  Warning, found a module with slope 0 in the decomposition." << std::endl;
+            }
+        }
+    }
     vec<Uni_B1> result;
     // Max-heap: pair of (slope_value, vector_index)
     auto comp = [](const std::pair<double, int>& a, const std::pair<double, int>& b) {
@@ -54,7 +72,6 @@ vec<Uni_B1>  k_merge(vec<vec<Uni_B1>>& factors_from_indecomp){
             pq.push({factors_from_indecomp[vec_idx][indices[vec_idx]].slope_value, vec_idx});
         }
     }
-    
     return result;
 }
 
@@ -197,8 +214,16 @@ void skyscraper_invariant(const R2Mat& input,
     
     R2Mat X = input;
 
-    assert(X.get_num_rows() > 1);
-
+    if(X.get_num_rows() ==1 ){
+        Uni_B1 res(X);
+        res.slope_value = res.slope(bounds);
+        if(res.d1.get_num_cols() == 1){
+            std::cout << "  Warning, found an unbounded module after computing the resolution." << std::endl;
+        }
+        vec<Uni_B1> single_factor = vec<Uni_B1>{res};
+        result.push_back(single_factor);
+        return;
+    }
     if(X.get_num_rows() > 1){
         
        // X.to_stream_r2(std::cout);

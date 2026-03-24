@@ -53,14 +53,16 @@ struct Uni_B1 : R2Resolution<int> {
 
     double area() const;
     double area(const r2degree& bound) const;
+    double area_unbounded(const pair<r2degree>& bounds) const;
     double area(const pair<r2degree>& bounds) const;
     void compute_area_polynomial(const pair<r2degree>& bounds);
-    double evaluate_area_polynomial(r2degree d);
-    double evaluate_slope_polynomial(r2degree d);
+    void compute_area_polynomial_unbounded(const pair<r2degree>& bounds);
+    double evaluate_area_polynomial(r2degree d, const pair<r2degree>& bounds);
+    double evaluate_slope_polynomial(r2degree d, const pair<r2degree>& bounds);
     double slope() const;
     double slope(const r2degree& bound) const;
     double slope(const pair<r2degree>& bounds) const;
-
+    void compute_slope(const pair<r2degree>& bounds);
     
 };
 

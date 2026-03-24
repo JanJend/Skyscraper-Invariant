@@ -72,8 +72,23 @@ double Uni_B1::area(const r2degree& bound) const {
     return base_area;
 }
 
-
 double Uni_B1::area(const pair<r2degree>& bounds) const {
+    r2degree range = bounds.second-bounds.first;
+    double range_area = range.first * range.second;
+    double area = 0;
+    area += d1.get_num_rows()*d1.row_degrees[0].first * d1.row_degrees[0].second;
+    for(const auto& degree : d1.col_degrees){
+        area -= degree.first * degree.second;
+    }
+    for(const auto& degree : d2.col_degrees){
+        area += degree.first * degree.second;
+    }
+    double normalised_area = area/range_area;
+    return normalised_area;
+}
+
+
+double Uni_B1::area_unbounded(const pair<r2degree>& bounds) const {
     auto [min, max] = d1.bounding_box();
     max = bounds.second;
     assert(max.first >= min.first);
@@ -100,8 +115,31 @@ double Uni_B1::area(const pair<r2degree>& bounds) const {
     return normalised_area;
 }
 
-
 void Uni_B1::compute_area_polynomial(const pair<r2degree>& bounds) {
+
+    int num_rows = d1.get_num_rows();
+    r2degree range = bounds.second-bounds.first;
+    double range_area = range.first * range.second;
+
+    area_polynomial.fill(0.0);
+    area_polynomial[0] = this->area(bounds);
+    area_polynomial[1] += num_rows * this->d1.row_degrees[0].second;
+    area_polynomial[2] += num_rows * this->d1.row_degrees[0].first;
+    for(const auto& degree :  d1.col_degrees){
+        if(degree.first == d1.row_degrees[0].first){
+            area_polynomial[1] -= degree.second;
+        }
+        if(degree.second == d1.row_degrees[0].second){
+            area_polynomial[2] -= degree.first;
+        }
+    }
+    for(int i = 1; i < 3; i++){
+        area_polynomial[i] /= range_area;
+    }
+
+}
+
+void Uni_B1::compute_area_polynomial_unbounded(const pair<r2degree>& bounds) {
     int num_rows = d1.get_num_rows();
     assert(std::is_sorted(d1.col_degrees.begin(), d1.col_degrees.end(), Degree_traits<r2degree>::lex_lambda()));
     bool test = true;
@@ -162,17 +200,19 @@ void Uni_B1::compute_area_polynomial(const pair<r2degree>& bounds) {
     }
 }
 
-double Uni_B1::evaluate_area_polynomial(r2degree d) {
+double Uni_B1::evaluate_area_polynomial(r2degree d, const pair<r2degree>& bounds) {
+    double range_area = (bounds.second.first - bounds.first.first) * (bounds.second.second - bounds.first.second);
     double& x = d.first;
     double& y = d.second;
-    return area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y;
+    return area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y/range_area;
 }
 
-double Uni_B1::evaluate_slope_polynomial(r2degree d) {
+double Uni_B1::evaluate_slope_polynomial(r2degree d, const pair<r2degree>& bounds) {
+    double range_area = (bounds.second.first - bounds.first.first) * (bounds.second.second - bounds.first.second);
     double& x = d.first;
     double& y = d.second;
-    int k = this->d1.get_num_rows();
-    return k / (area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y);
+    double k = this->d1.get_num_rows();
+    return k / (area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y/range_area);
 }
 
 
@@ -203,6 +243,10 @@ double Uni_B1::slope(const pair<r2degree>& bounds) const {
     }
     double slope_value = (static_cast<double>(d1.get_num_rows())/area);
     return slope_value;
+}
+
+void Uni_B1::compute_slope(const pair<r2degree>& bounds){
+    slope_value = this->slope(bounds);
 }
 
 } // namespace hnf

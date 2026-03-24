@@ -186,6 +186,7 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
             Uni_B1 res(std::move(M_induced));
             indecomposable_summands[x_index].push_back(res);
             indecomposable_summands[x_index].back().compute_area_polynomial(slope_bounds);
+            indecomposable_summands[x_index].back().compute_slope(slope_bounds);
             grid_ind_dimensions.push_back(1);
         } else {
             aida::Block_list sub_M_list;
@@ -198,6 +199,7 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
                 indecomposable_summands[x_index].emplace_back(Uni_B1(std::move(sub_M)));
                 Uni_B1& current_summand =  indecomposable_summands[x_index].back();
                 current_summand.compute_area_polynomial(slope_bounds);
+                current_summand.compute_slope(slope_bounds);
                 grid_ind_dimensions.push_back(sub_M.get_num_rows());
                 int dim = current_summand.d1.get_num_rows();
                 if(false){
@@ -221,43 +223,47 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
 
 
 
-
-
 // All of the following should normally go in a main.cpp file.
 
 namespace fs = std::filesystem;
 
 void display_help() {
-    std::cout << "Usage: ./aida <input_file> [options]\n"
-              << "Options:\n"
-              << "  -h, --help           Display this help message\n"
-              << "  -g, --diagonal       Save a copy where each subquotient is restricted to the diagonal to compute landscapes\n"
-              << "  -d, --is_decomposed  Specify if the input is already decomposed\n"
-              << "  -v, --version        Display version information\n"
-              << "  -b, --bruteforce     Stops hom-space calculation and thus most optimisation. \n"
-              << "  -s, --sort           Lexicographically sorts the relations of the input\n"
-              << "  -e, --exhaustive     Always iterates over all decompositions of a batch\n"
-              << "  -t, --statistics     Show statistics about indecomposable summands\n"
-              << "  -r, --runtime        Show runtime statistics and timers\n"
-              << "  -p, --progress       Turn off progressbar\n"
-              << "  -c, --basechange     Save base change\n"
-              << "  -o, --output <file>  Specify output file\n"
-              << "  -l, --less_console   Suppreses most console output\n"
-              << "  -m, --compare_b      Compares with -b at runtime, then runs with only -b and compares.\n"
-              << "  -a, --compare_e      Compares exhaustive and brute force at runtime.\n"
-              << "  -i, --compare_hom    Compares optimised and non-opt hom space calculation at runtime.\n"
-              << "  -j, --no_hom_opt     Does not use the optimised hom space calculation.\n"
-              << "  -w, --no_col_sweep   Does not use the column sweep optimisation.\n"
-              << "  -f, --alpha       Turns the computation of alpha-homs on.\n"
-              << "  -x, -test_files          Runs the algorithm on some test files.\n"
-              << "      <file> is optional and will default to the <input_file> with _decomposed appended\n"
-              << "      You can pass relative and absolute paths as well as only a directory."
-              << "Further Instructions: \n Make sure that the inputfile is a (sequence of) scc or firep presentations that are minimised.\n"
-              << std::endl;
+    std::cout
+        << "Usage: skyscraper <input_file> [options]\n\n"
+        << "  <input_file>  Path to the input file (relative or absolute).\n"
+        << "                If omitted, runs on a built-in test file.\n\n"
+        << "Options:\n"
+        << "  -h, --help                  Display this help message\n"
+        << "  -v, --version               Display version information\n\n"
+        << "Input:\n"
+        << "  -d, --is_decomposed         Treat input as already decomposed (skip AIDA step)\n"
+        << "  -x, --test_files            Run on built-in test files instead of an input file\n\n"
+        << "Computation:\n"
+        << "  -e, --exhaustive            Always iterate over all decompositions in a batch\n"
+        << "  -r, --resolution <x,y>      Set grid resolution (default: 200,200)\n"
+        << "  -y, --dynamic_grid          Disable dynamic grid (use fixed resolution)\n"
+        << "  -k, --grassmann <n>         Set Grassmann value for the computation\n"
+        << "  -u, --subdivision           Enable subdivision mode\n"
+        << "  -f, --alpha                 Enable computation of alpha-homs\n"
+        << "  -j, --no_hom_opt            Disable optimised hom-space calculation\n\n"
+        << "Output:\n"
+        << "  -o, --output [file]         Write output to file\n"
+        << "                              Defaults to <input_file>.sky if no path is given\n"
+        << "  -g, --diagonal              Also save a diagonal-restricted copy (for landscapes)\n"
+        << "  -c, --basechange            Save the base change alongside the decomposition\n\n"
+        << "Diagnostics:\n"
+        << "  -s, --statistics            Show statistics about indecomposable summands\n"
+        << "  -t, --runtime               Show runtime statistics and timers\n"
+        << "  -p, --progress              Suppress the progress bar\n"
+        << "  -l, --less_console          Suppress most console output\n\n"
+        << "Notes:\n"
+        << "  - Input must be a (sequence of) scc or firep presentations that are minimised.\n"
+        << "  - Relative and absolute paths are both accepted for <input_file>.\n"
+        << std::endl;
 }
 
 void display_version() {
-    std::cout << "Skyscraper Invariant version 0.1 -- 7th Oct 2025\n";
+    std::cout << "Skyscraper Invariant version 0.2 -- 23rd Mar 2026\n";
 }
 
 

@@ -27,7 +27,7 @@ struct FileInfo {
 };
 
 void initialize_decomposer_config(aida::AIDA_functor& decomposer) {
-    decomposer.config.brute_force = false; // There is currently sometimes a bug in aida when this is false.
+    decomposer.config.brute_force = true; // There is currently sometimes a bug in aida when this is false.
     decomposer.config.exhaustive = false;
     decomposer.config.sort = false;
     decomposer.config.sort_output = true;
@@ -105,8 +105,11 @@ bool parse_command_line(int argc, char** argv, ProgramConfig& config) {
     int opt;
     int option_index = 0;
     
-    while ((opt = getopt_long(argc, argv, "ho::gestr:pclfjxdyk:u", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "ho::gestr:pclfjxdyk:ub", long_options, &option_index)) != -1) {
         switch (opt) {
+            case 'b':
+                config.decomposer.config.brute_force = true;
+                break;
             case 'h':
                 hnf::display_help();
                 return false;
@@ -207,7 +210,7 @@ FileInfo resolve_input_file(int argc, char** argv, bool test_files, bool& is_dec
         // Do nothing - test files handled separately
     } else {
         // No file provided and not in test mode - use default test file
-        fs::path default_test_file = "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_200x200_res.sccsum";
+        fs::path default_test_file = "/home/jan/MP-Workspace/data/hypoxic1_log/hypoxic1_FoxP3_logdensity_H1.scc";
         
         file_info.matrix_path = default_test_file.string();
         file_info.input_directory = default_test_file.parent_path().string();
@@ -218,7 +221,7 @@ FileInfo resolve_input_file(int argc, char** argv, bool test_files, bool& is_dec
             ? file_info.filename 
             : file_info.filename.substr(0, dot_position);
         
-        is_decomposed = true;
+        is_decomposed = false;
         std::cout << "No input file specified. Running on test file: " << file_info.matrix_path << std::endl;
     }
     
@@ -274,7 +277,7 @@ void write_output(const std::ostringstream& ostream, const FileInfo& file_info, 
 int main(int argc, char** argv) {
     ProgramConfig config;
     initialize_decomposer_config(config.decomposer);
-    
+    std::cout << std::fixed << std::setprecision(8);
     if (argc < 2) {
         if (!handle_interactive_input(argc, argv)) {
             return 1;

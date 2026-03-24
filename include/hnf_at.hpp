@@ -15,6 +15,7 @@ struct slope_comparator{
 
 HN_factors split_into_intervals(Uni_B1& stable_module);
 
+HN_factors sort_merge(vec<HN_factors>& factors_from_indecomp);
 HN_factors k_merge(vec<HN_factors>& sorted_lists);
 
 void recalculate_slopes(HN_factors& composition_factors);
@@ -47,7 +48,22 @@ void skyscraper_invariant_sum_append(Container& summands,
         vec<vec<vec<SparseMatrix<int>>>>& subspaces,
         const pair<r2degree>& bounds, const bool filter = false) {
     for(R2Mat& X : summands){
-        skyscraper_invariant(X, result, subspaces, bounds, filter);
+        if(X.get_num_rows() == 0){
+            continue;
+        } else if(X.get_num_rows() == 1){
+            if(X.get_num_cols() == 1){
+                std::cout << "  Warning, found an unbounded module after computing the resolution." << std::endl;
+            }
+            Uni_B1 res(X);
+            res.slope_value = res.slope(bounds);
+            if(res.d1.get_num_cols() == 1){
+                std::cout << "  Warning, found an unbounded module after computing the resolution." << std::endl;
+            }
+            vec<Uni_B1> single_factor = vec<Uni_B1>{res};
+            result.push_back(single_factor);
+        } else {
+            skyscraper_invariant(X, result, subspaces, bounds, filter);
+        }
     }
 }
 

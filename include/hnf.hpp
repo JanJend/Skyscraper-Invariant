@@ -59,169 +59,6 @@ void write_slopes_to_csv(const vec<vec<double>>& slopes,
 
 void show_progress_bar(int& i, int& total, std::string& name);
 
-template<typename Container, typename Outputstream>
-void process_summands_fixed_grid(aida::AIDA_functor& decomposer, 
-    Outputstream& ostream, 
-    const int& grid_length_x, const int& grid_length_y, 
-    Container& indecomps) {
-    
-    
-    bool progress_bar = false;
-    if (decomposer.config.progress){
-        progress_bar = true;
-        decomposer.config.progress = false;
-    } 
-    bool show_info = false;
-    if (decomposer.config.show_info) {
-        decomposer.config.show_info = false;
-        show_info = true;
-    }
-    int num_of_summands = indecomps.size();
-    if (show_info) {
-        std::cout << "The first decomposition has " << num_of_summands << " indecomposable summands." << std::endl;
-    }
-
-    
-    vec<int> all_scss_dimensions;
-    vec<int> first_ind_dimensions;
-    vec<int> grid_ind_dimensions;
-
-    pair<r2degree> bounds = indecomps.front().bounding_box();
-    
-
-    for (auto& B : indecomps) {
-        
-        first_ind_dimensions.push_back(B.get_num_rows());
-
-        auto [min, max] = B.bounding_box();
-        // This is a bit ineffcient maybe and should be computed earlier directly from the module before decomposition
-        // TO-DO: There is also a computation error here, the upper bound is not computed correctly?
-        
-        r2degree lower_bound = Degree_traits<r2degree>::meet(bounds.first, min);
-        r2degree upper_bound = Degree_traits<r2degree>::join(bounds.second, max);
-        bounds = {lower_bound, upper_bound};
-
-    }
-    r2degree range = bounds.second - bounds.first;
-    bounds = {bounds.first, bounds.second + range * 0.3}; // Add a bit of space to the upper bound
-    r2degree grid_step = get_grid_step(bounds.first, bounds.second, grid_length_x, grid_length_y);
-
-
-    ostream << "HNF" << std::endl;
-
-    ostream << grid_length_x << "," << grid_length_y << std::endl;
-    ostream  << bounds.first << "," << bounds.second << "," << grid_step << std::endl;
-    int grid_size = grid_length_x * grid_length_y;
-
-    // Since a lot of applications will create unbounded modules, we need to set a bound where to cut off
-    // OR use a measure where the dimension function is still integrable
-    // Here I am trying to cut off the density parameter (which should be the second one!) 
-    // of a density-rips bifiltration quite early  after stabilisation
-    // so that features which are already visible in low density regions are preferred.
-    // For the scale parameter (first parameter) instead, it should not matter,
-    // because for reduced homology the modules are bounded in this direction.
-    double slope_overlap = 0.1;
-    pair<r2degree> slope_bounds = {bounds.first, bounds.second + slope_overlap * range};
-
-    std::cout << "  Presentation is bounded by " << bounds.first << " and " << bounds.second << std::endl;
-    std::cout << "  Modules are cut off at " << slope_bounds.second << std::endl;
-    
-
-    vec<HN_factors> composition_factors;
-    composition_factors.reserve(100);
-
-    r2degree current_grid_degree = bounds.first;
-    for(int i = 0; i < grid_length_x; i++){ 
-      current_grid_degree.second = bounds.first.second; // Reset y-coordinate for each x-coordinate
-      for(int j = 0; j < grid_length_y; j++){
-        
-        ostream << "G," << i << "," << j << ", " << current_grid_degree << "\n";
-
-        if (progress_bar) {
-            int current_index = i * grid_length_y + j;
-            std::string name = "Grid point";
-            show_progress_bar(current_index, grid_size, name);
-        }
-        int indecomp_index = -1;
-        for(auto& B : indecomps){
-            indecomp_index++;
-
-            auto B_induced = B.submodule_generated_at(current_grid_degree);
-            if(B_induced.get_num_rows() == 1){
-                grid_ind_dimensions.push_back(1);
-                all_scss_dimensions.push_back(1);
-                Uni_B1 res(B_induced);
-                res.slope_value = res.slope(slope_bounds);
-                vec<Uni_B1> single_factor = vec<Uni_B1>{res};
-                if(res.slope_value == INFINITY){
-                    assert(false);
-                    std::cerr << "Slope is infinite, consider passing a bound." << std::endl;
-                }
-                composition_factors.push_back(single_factor);
-                // slopes[i].push_back(res.slope_value);
-
-            } else if ( B_induced.get_num_rows() == 0){
-                // Do nothing.
-            } else {
-                aida::Block_list sub_B_list;
-                B_induced.compute_col_batches();
-                decomposer(B_induced, sub_B_list);
-                int max_dim = 0;
-                for(Block& sub_B : sub_B_list){
-                    if(sub_B.get_num_rows() > max_dim){
-                        max_dim = sub_B.get_num_rows();
-                    }
-                    grid_ind_dimensions.push_back(sub_B.get_num_rows());
-                }
-                auto subspaces = sparse_seperated_grassmannians<int>(max_dim);
-                skyscraper_invariant_sum_append(sub_B_list, composition_factors, subspaces, slope_bounds);
-            }
-
-            
-        }
-
-        // Recalculate the slopes for the filtration
-            
-        HN_factors filtration = k_merge(composition_factors);
-        recalculate_slopes(filtration);
-
-        for(auto& hn_factor : filtration){
-            int k = hn_factor.d1.get_num_rows();
-            all_scss_dimensions.push_back(k);
-            if(hn_factor.slope_value == INFINITY){
-                std::cout << "  There are unbounded modules in the decomposition." << std::endl;
-                std::cout << "  Consider passing a bound." << std::endl;
-                assert(false);
-            }
-            if(k ==1){
-                to_stream(ostream, hn_factor);
-            } else {
-                // Need to split into intervals:
-                auto intervals = split_into_intervals(hn_factor);
-                for(auto& interval : intervals){
-                    to_stream(ostream, interval);
-                }
-            }
-        }
-
-        // std::sort(slopes[i].begin(), slopes[i].end());
-        current_grid_degree.second += grid_step.second;
-      }
-      current_grid_degree.first += grid_step.first;
-    }
-
-    std::cout << std::endl;
-    std::cout << "  Tracked the dimensions of " << grid_ind_dimensions.size() << " indecomposable summands." << std::endl;
-    
-    std::cout << "  The dimensions of indecomposable summands at the grid points are distributed as:" << std::endl;
-    calculate_stats(grid_ind_dimensions);
-
-    std::cout << "  The dimensions of the composition factors at the grid points are distributed as:" << std::endl;
-    calculate_stats(all_scss_dimensions);
-
-    // write_slopes_to_csv(slopes, grid_points, "slopes.csv");
-
-}
 
 
 
@@ -324,9 +161,38 @@ void update_grid_locations_x(
     for(R2Mat& M : indecomps){
         k++;
         int& local_x = grid_locations[k].first;
+        
         if(local_x + 1 == static_cast<int>(M.x_grid.size()) ){
             
         } else {
+            if(false){
+                std::cout << std::setprecision(12);
+                std::cout << "  Updating x grid locations at grid degree " << current_grid_degree << std::endl;
+                std::cout << "  local_x: " << local_x << std::endl;
+                std::cout << "  M.x_grid for the next value: " << M.x_grid[local_x + 1] << std::endl;
+                std::cout << std::endl;
+                if(local_x + 1 < static_cast<int>(M.x_grid.size()) ){
+                    std::cout << " Not at end yet. " << std::endl;
+                    auto B_induced = M.submodule_generated_at(current_grid_degree);
+                    std::cout << B_induced.get_num_rows() << " rows in the induced submodule at the current grid degree." << std::endl;
+                    if(B_induced.get_num_rows() != 0){
+                        std::cout << "  We're not in the local grid yet, but there is already a non-trivial submodule induced at the current grid degree:" << current_grid_degree << std::endl;
+                        std::cout << "  The indecomposable is at position: " << k << " and has presentation " << std::endl;
+                        M.print_graded();
+                        std::cout << "  The induced submodule has presentation " << std::endl;
+                        B_induced.print_graded();
+                        if(current_grid_degree.first >= M.x_grid[local_x + 1]){
+                            std::cout << "moving forward as planned.   " << std::endl;
+                        } else {
+                            std::cout << "M_xgrid[local_x + 1] is " << M.x_grid[local_x + 1] << std::endl;
+                            std::cout << "  But the current grid degree is smaller than the next x grid point, so we should not move forward yet." << std::endl;
+                            std::cout << "  This should not happen, check the grid computation." << std::endl;
+                        }
+
+                    }
+                    
+                }
+            }
             while(local_x + 1 < static_cast<int>(M.x_grid.size()) ){
                 if(current_grid_degree.first >= M.x_grid[local_x + 1]){
                     local_x++;
@@ -398,7 +264,7 @@ void process_grid_cell(
     
     bool test = false;
     
-
+    bool track= false;
     int k = -1;
     for(auto & M : indecomps){
         vec<HN_factors> test_factors = vec<HN_factors>();
@@ -407,12 +273,27 @@ void process_grid_cell(
         auto& local_grid_index = grid_locations[k];
         auto& local_x = local_grid_index.first;
         r2degree local_grid_degree;
+
+
         if(local_x == -1 || local_grid_index.second == -1){
+            if(track){
+                std::cout << " tracking at grid point " << current_grid_degree << std::endl;
+                auto B_induced = M.submodule_generated_at(current_grid_degree);
+                if(B_induced.get_num_rows() != 0){
+                    std::cout << "  We're not in the local grid yet, but there is already a non-trivial submodule induced at the current grid degree:" << current_grid_degree << std::endl;
+                    std::cout << "  The indecomposable is at position: " << k << " and has presentation " << std::endl;
+                    M.print_graded();
+                    std::cout << "  The induced submodule has presentation " << std::endl;
+                    B_induced.print_graded();
+                }
+            }
             // We're not in the local grid yet, so can skip this summand.
             continue;
         } else {
             local_grid_degree = std::make_pair(M.x_grid[local_grid_index.first], M.y_grid[local_grid_index.second]);
         }
+
+        
         
         Dynamic_HNF& local_dhnf =  local_grid_row_data[k];
         auto& local_summands = local_dhnf.indecomposable_summands[local_x];
@@ -441,18 +322,33 @@ void process_grid_cell(
                 assert(local_summands.size() == 0);
             }
         }
-
         
         for( Uni_B1& summand : local_summands){
+            double area = static_cast<double>(1)/summand.slope_value;
             auto shifted_summand = summand;
             r2degree verschiebung = current_grid_degree - local_grid_degree;
             if( shifted_summand.d1.get_num_rows() == 0){
                 std::cout << " Empty summands should have been filtered out." << std::endl;
                 assert(false);
             } else if(shifted_summand.d1.get_num_rows() == 1){
-                double slope = shifted_summand.evaluate_slope_polynomial(verschiebung);
+                double test_slope1 = shifted_summand.slope_value;
+                double slope = shifted_summand.evaluate_slope_polynomial(verschiebung, slope_bounds);
+                if( test_slope1 > slope){
+                    std::cout << "  -   Decreasing slope after shifting by Verschiebung: " << test_slope1 << " original vs. now" << slope << std::endl;
+                    std::cout << "original area: " << area << " vs current " << shifted_summand.evaluate_area_polynomial(verschiebung, slope_bounds) << std::endl;
+                    std::cout << "  area polynomial: " << shifted_summand.area_polynomial[0] << "  " << shifted_summand.area_polynomial[1] << "  " << shifted_summand.area_polynomial[2]  << std::endl;
+                    std::cout << "  Current grid degree: " << current_grid_degree << std::endl;
+                    std::cout << "  Local grid degree: " << local_grid_degree << std::endl;
+                    std::cout << "  i: " << i << ", j: " << j << ", k: " << k << std::endl;
+                    std::cout << "  Verschiebung: " << verschiebung << std::endl;
+                    std::cout << "  Slope bounds: " << slope_bounds.first << " " << slope_bounds.second << std::endl;
+                    std::cout << "  Module: " << std::endl;
+                    shifted_summand.d1.print_graded();
+                    std::cout << "  range_area " << (slope_bounds.second.first - slope_bounds.first.first) * (slope_bounds.second.second - slope_bounds.first.second) << std::endl;
+                    assert(false);
+                }
                 if(test){
-                    double area = shifted_summand.evaluate_area_polynomial(verschiebung);
+                    double area = shifted_summand.evaluate_area_polynomial(verschiebung, slope_bounds);
                     R2Mat test_cutoff = shifted_summand.d1.submodule_generated_at(current_grid_degree);
                     if(test_cutoff.get_num_rows() != 0){
                         Uni_B1 test_summand(test_cutoff);
@@ -515,6 +411,162 @@ void process_grid_cell(
 };
 
 
+template<typename Container, typename Outputstream>
+void process_summands_fixed_grid(aida::AIDA_functor& decomposer, 
+    Outputstream& ostream, 
+    const int& grid_length_x, const int& grid_length_y, 
+    Container& indecomps) {
+    
+    
+    bool progress_bar = false;
+    if (decomposer.config.progress){
+        progress_bar = true;
+        decomposer.config.progress = false;
+    } 
+    bool show_info = false;
+    if (decomposer.config.show_info) {
+        decomposer.config.show_info = false;
+        show_info = true;
+    }
+    int num_of_summands = indecomps.size();
+    if (show_info) {
+        std::cout << "The first decomposition has " << num_of_summands << " indecomposable summands." << std::endl;
+    }
+
+    
+    vec<int> all_scss_dimensions;
+    vec<int> first_ind_dimensions;
+    vec<int> grid_ind_dimensions;
+
+    auto [lower_bound, upper_bound, grid_step, slope_bounds] = compute_bounds_and_grid(indecomps, first_ind_dimensions, grid_length_x, grid_length_y);
+    write_grid_metadata(ostream, grid_length_x, grid_length_y, lower_bound, upper_bound, grid_step, slope_bounds, show_info);
+
+    int grid_size = grid_length_x * grid_length_y;
+
+    // Since a lot of applications will create unbounded modules, we need to set a bound where to cut off
+    // OR use a measure where the dimension function is still integrable
+    // Here I am trying to cut off the density parameter (which should be the second one!) 
+    // of a density-rips bifiltration quite early after stabilisation
+    // so that features which are already visible in low density regions are preferred.
+    // For the scale parameter (first parameter) instead, it should not matter,
+    // because for reduced homology the modules are bounded in this direction.
+
+    
+    for (auto& B : indecomps) {
+        // Now cutting the module off at the slope bound, so that we do not have to deal with unbounded modules anymore,
+        //  which has caused bugs in the past.
+        B.bound_support(slope_bounds.second);
+    }
+
+    vec<HN_factors> composition_factors;
+    composition_factors.reserve(100);
+
+    r2degree current_grid_degree = lower_bound;
+    for(int j = 0; j < grid_length_y; j++){
+        current_grid_degree.first = lower_bound.first; // Reset x-coordinate for each y-coordinate
+        for(int i = 0; i < grid_length_x; i++){ 
+      
+        composition_factors.clear();
+        ostream << "G," << i << "," << j << ", " << current_grid_degree << "\n";
+
+        if (progress_bar) {
+            int current_index = j * grid_length_x + i;
+            std::string name = "Grid point";
+            show_progress_bar(current_index, grid_size, name);
+        }
+        int indecomp_index = -1;
+
+        bool track = false;
+
+        for(auto& B : indecomps){
+            indecomp_index++;
+
+            auto B_induced = B.submodule_generated_at(current_grid_degree);
+            if(B_induced.get_num_rows() == 1){
+                if(track){
+                    std::cout << "  Induced submodule at grid point " << current_grid_degree << std::endl;
+                    std::cout << "  The indecomposable is at position: " << indecomp_index << " and has presentation " << std::endl;
+                    B.print_graded();
+                    std::cout << "  The induced submodule has presentation " << std::endl;
+                    B_induced.print_graded();
+                }
+                grid_ind_dimensions.push_back(1);
+                all_scss_dimensions.push_back(1);
+
+                Uni_B1 res(B_induced);
+                res.slope_value = res.slope(slope_bounds);
+
+                vec<Uni_B1> single_factor = vec<Uni_B1>{res};
+                if(res.slope_value == INFINITY){
+                    assert(false);
+                    std::cerr << "Slope is infinite, consider passing a bound." << std::endl;
+                }
+                composition_factors.push_back(single_factor);
+                // slopes[i].push_back(res.slope_value);
+
+            } else if ( B_induced.get_num_rows() == 0){
+                // Do nothing.
+            } else {
+                aida::Block_list sub_B_list;
+                B_induced.compute_col_batches();
+                decomposer(B_induced, sub_B_list);
+                int max_dim = 0;
+                for(Block& sub_B : sub_B_list){
+                    if(sub_B.get_num_rows() == 1){
+
+                    } else if(sub_B.get_num_rows() > max_dim){
+                        max_dim = sub_B.get_num_rows();
+                    }
+                    grid_ind_dimensions.push_back(sub_B.get_num_rows());
+                }
+                auto subspaces = sparse_seperated_grassmannians<int>(max_dim);
+                skyscraper_invariant_sum_append(sub_B_list, composition_factors, subspaces, slope_bounds);
+            }
+
+            
+        }
+
+        // Recalculate the slopes for the filtration
+            
+        HN_factors filtration = sort_merge(composition_factors);
+
+        for(auto& hn_factor : filtration){
+            int k = hn_factor.d1.get_num_rows();
+            all_scss_dimensions.push_back(k);
+            if(hn_factor.slope_value == INFINITY){
+                std::cout << "  There are unbounded modules in the decomposition." << std::endl;
+                std::cout << "  Consider passing a bound." << std::endl;
+                assert(false);
+            }
+            if(k ==1){
+                to_stream(ostream, hn_factor);
+            } else {
+                // Need to split into intervals:
+                auto intervals = split_into_intervals(hn_factor);
+                for(auto& interval : intervals){
+                    to_stream(ostream, interval);
+                }
+            }
+        }
+
+        // std::sort(slopes[i].begin(), slopes[i].end());
+        current_grid_degree.first += grid_step.first;
+      }
+      current_grid_degree.second += grid_step.second;
+    }
+
+    std::cout << std::endl;
+    std::cout << "  Tracked the dimensions of " << grid_ind_dimensions.size() << " indecomposable summands." << std::endl;
+    
+    std::cout << "  The dimensions of indecomposable summands at the grid points are distributed as:" << std::endl;
+    calculate_stats(grid_ind_dimensions);
+
+    std::cout << "  The dimensions of the composition factors at the grid points are distributed as:" << std::endl;
+    calculate_stats(all_scss_dimensions);
+
+    // write_slopes_to_csv(slopes, grid_points, "slopes.csv");
+
+}
 
 template<typename Container, typename Outputstream>
 void process_summands_smart_grid(aida::AIDA_functor& decomposer, 
@@ -551,8 +603,13 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
 
     auto [lower_bound, upper_bound, grid_step, slope_bounds] = compute_bounds_and_grid(indecomps, first_ind_dimensions, grid_length_x, grid_length_y);
     write_grid_metadata(ostream, grid_length_x, grid_length_y, lower_bound, upper_bound, grid_step, slope_bounds, show_info);
-    
-    double max_slope = grid_length_x*grid_length_y; // If the slope is normalised, than one pixel will have this slope.
+
+    for (auto& B : indecomps) {
+        // Now cutting the module off at the slope bound, so that we do not have to deal with unbounded modules anymore,
+        //  which has caused bugs in the past.
+        B.bound_support(slope_bounds.second);
+    }
+
 
     // Will store the actual composition factors of the HNF at each grid point.
     vec<HN_factors> composition_factors;
@@ -568,7 +625,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     r2degree current_grid_degree = lower_bound - grid_step;
 
     for(int j = 0; j < grid_length_y; j++){ 
-        current_grid_degree.first = lower_bound.first - grid_step.first; // Reset x-coordinate for each y-coordinate
+        current_grid_degree.first = lower_bound.first - grid_step.first*0.999; // Reset x-coordinate for each y-coordinate
         current_grid_degree.second = lower_bound.second + j*grid_step.second;
         // First in y direction, we recompute all local decompositions whenever necessary.
         update_HNF_rows_at_y_level(current_grid_degree, indecomps, grid_locations, local_grid_row_data, decomposer, slope_bounds, subspaces);
@@ -592,8 +649,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
                // Need to recalculate the slope values of the actual filtration from the factors.
 
 
-            HN_factors filtration = k_merge(composition_factors);
-            recalculate_slopes(filtration);
+            HN_factors filtration = sort_merge(composition_factors);
 
             for(auto& hn_factor : filtration){
                 int k = hn_factor.d1.get_num_rows();
@@ -632,8 +688,6 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     bool is_decomposed = false,
     const int& grid_length_x = 200, const int& grid_length_y = 200,
     const int subspace_dim = -1) {
-    
-    
 
     if(is_decomposed){
         vec<R2Mat> matrices;
