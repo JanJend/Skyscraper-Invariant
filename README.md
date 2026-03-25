@@ -320,12 +320,13 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 ## Credits
 
 **Developed at:**
-
+- TU Graz and University of Oxford
+  
 **Theoretical development:**
-- anonymous
+- Jan Jendrysiak and Marc Fersztand
 
 **Code implementation:**
-- anonymous
+- Jan Jendrysiak
 
 **Dependencies:**
 - [AIDA](https://github.com/JanJend/AIDA) - Persistence module decomposition
