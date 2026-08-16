@@ -1,6 +1,7 @@
 #include "filt_landscape.hpp"
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 using namespace hnf;
 

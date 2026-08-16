@@ -1,9 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
 project(skyscraper VERSION 1.0 LANGUAGES CXX)
 
-# Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
+# Set C++ standard (overridable on the command line for testing newer standards)
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Change these paths to wherever AIDA and Persistence-Algebra are.
+# Must be set before the find_library below, which searches ${AIDA_DIR}/build.
+set(AIDA_DIR "${CMAKE_SOURCE_DIR}/../AIDA" CACHE PATH "Path to AIDA directory")
+set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra/" CACHE PATH "Path to Persistence-Algebra directory")
+
 # Need AIDA installed as a library
 find_library(AIDA_LIBRARY NAMES aida
     PATHS ${AIDA_DIR}/build /usr/local/lib
@@ -13,8 +21,25 @@ find_library(AIDA_LIBRARY NAMES aida)
 if(NOT AIDA_LIBRARY)
     message(FATAL_ERROR "AIDA library not found. Build and install AIDA first.")
 endif()
-# Find Boost
-find_package(Boost REQUIRED COMPONENTS timer chrono system)
+# Find Boost. Boost.System is header-only since 1.69 and newer distributions
+# (Boost >= 1.90) no longer ship a boost_system CMake config, so do not request it.
+find_package(Boost REQUIRED COMPONENTS timer chrono)
+
+# OpenMP is optional: used when available, ignored otherwise.
+# Apple clang ships no OpenMP runtime, so point CMake at Homebrew's libomp if present.
+if(APPLE AND NOT DEFINED OpenMP_ROOT)
+    execute_process(COMMAND brew --prefix libomp
+                    OUTPUT_VARIABLE _brew_libomp
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET)
+    if(_brew_libomp AND EXISTS "${_brew_libomp}")
+        set(OpenMP_ROOT "${_brew_libomp}")
+    endif()
+endif()
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    link_libraries(OpenMP::OpenMP_CXX)
+endif()
 #Find hdf5 (for new version)
 # find_package(HDF5 REQUIRED COMPONENTS CXX)
 # Find CGAL
@@ -42,10 +67,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 # endif()
 # Add _debug suffix to executables in Debug mode
 set(CMAKE_DEBUG_POSTFIX "_debug")
-
-# Change these paths to wherevery AIDA and Persistence-Algebra are.
-set(AIDA_DIR "${CMAKE_SOURCE_DIR}/../AIDA" CACHE PATH "Path to AIDA directory")
-set(PERSISTENCE_ALGEBRA_DIR "${CMAKE_SOURCE_DIR}/../Persistence-Algebra/" CACHE PATH "Path to Persistence-Algebra directory")
 
 # Verify that external dependencies exist
 if(NOT EXISTS "${AIDA_DIR}/include/aida_interface.hpp")
@@ -80,7 +101,7 @@ if(NOT BUILD_EXP)
 
     target_link_libraries(hnf_main ${AIDA_LIBRARY} ${Boost_TIMER_LIBRARY}
         ${Boost_CHRONO_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY} CGAL::CGAL)
+        CGAL::CGAL)
     set_target_properties(hnf_main PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
     # Makes filtered landscapes from .sky files
@@ -114,8 +135,7 @@ add_executable(large_induced_indecomposables
 )
 
 target_link_libraries(large_induced_indecomposables ${AIDA_LIBRARY} ${Boost_TIMER_LIBRARY}
-    ${Boost_CHRONO_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY})
+    ${Boost_CHRONO_LIBRARY})
 set_target_properties(large_induced_indecomposables PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
 add_executable(hnf_at_origin
@@ -124,8 +144,7 @@ add_executable(hnf_at_origin
     hnf_at_origin.cpp
 )
 target_link_libraries(hnf_at_origin  ${Boost_TIMER_LIBRARY}
-    ${Boost_CHRONO_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY} )
+    ${Boost_CHRONO_LIBRARY})
 set_target_properties(hnf_at_origin PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
 add_executable(random_uni_B1

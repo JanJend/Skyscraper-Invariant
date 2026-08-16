@@ -1,5 +1,17 @@
 #include "subdivision.hpp"
 
+// CGAL 6 changed CGAL::intersection() to return std::optional<std::variant<...>>;
+// CGAL 5 returned boost::optional<boost::variant<...>>. Both accessors take a
+// pointer to the variant and return T*, so a single alias covers both.
+#include <CGAL/version.h>
+#if CGAL_VERSION_NR >= 1060000000
+  #include <variant>
+  #define HNF_VARIANT_GET_IF std::get_if
+#else
+  #include <boost/variant.hpp>
+  #define HNF_VARIANT_GET_IF boost::get
+#endif
+
 namespace hnf {
 
 std::vector<Point_3> dual_points_polys(const vec<std::array<double,3>>& polynomials){
@@ -79,7 +91,7 @@ std::optional<Segment_2> clip_segment_to_box(const Point_2& p1, const Point_2& p
                                                const BoundingBox& box) {
     auto result = CGAL::intersection(Segment_2(p1, p2), box.to_cgal_rect());
     if (result) {
-        if (const Segment_2* seg = boost::get<Segment_2>(&*result)) {
+        if (const Segment_2* seg = HNF_VARIANT_GET_IF<Segment_2>(&*result)) {
             return *seg;
         }
     }
@@ -92,7 +104,7 @@ std::optional<Segment_2> clip_ray_to_box(const Point_2& source, const K::Vector_
     K::Ray_2 ray(source, dir);
     auto result = CGAL::intersection(ray, box.to_cgal_rect());
     if (result) {
-        if (const Segment_2* seg = boost::get<Segment_2>(&*result)) {
+        if (const Segment_2* seg = HNF_VARIANT_GET_IF<Segment_2>(&*result)) {
             return *seg;
         }
     }
