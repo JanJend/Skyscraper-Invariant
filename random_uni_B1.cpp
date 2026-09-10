@@ -41,14 +41,14 @@ void compute_random_uni_b1(std::filesystem::path output_path, const int optional
         M.col_degrees.push_back( {0.0, 1.0} );
     }
     M.set_num_cols(M.data.size());
-    M.sort_columns_lexicographically();
-    M.minimize();
+    R2Module<int> module(std::move(M));
+    module.minimize();
     std::ofstream output_file(output_path);
     if (!output_file.is_open()) {
         std::cerr << "Error: Unable to open output file " << output_path << std::endl;
         return;
     } else {
-        M.to_stream_r2(output_file);
+        module.to_stream(output_file);
         output_file.close();
         std::cout << "Random Uni B1 presentation computed and saved to: " << output_path << std::endl;
     }

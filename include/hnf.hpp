@@ -92,8 +92,9 @@ std::tuple<r2degree, r2degree, r2degree, pair<r2degree>> compute_bounds_and_grid
     const double range_extension = 0.1;
     const double slope_overlap = 0.1;
 
-    auto [lower_bound, upper_bound] = indecomps.front().bounding_box();
-    for (R2Mat& M : indecomps) {
+    auto [lower_bound, upper_bound] = module_presentation(indecomps.front()).bounding_box();
+    for (auto& indecomp : indecomps) {
+        R2Mat& M = module_presentation(indecomp);
         // Get a Grid for each component, so that we do not have to recompoute the submodules and their decomposition
         M.compute_grid_representation();
         first_ind_dimensions.push_back(M.get_num_rows());
@@ -121,7 +122,8 @@ void update_HNF_rows_at_y_level(
     const vec<vec<vec<SparseMatrix<int>>>>& subspaces) {
 
     int k = -1;
-    for(R2Mat& M : indecomps){
+    for(auto& indecomp : indecomps){
+        R2Mat& M = module_presentation(indecomp);
         k++;
         bool recompute = false;
         grid_locations[k].first = -1; // Reset x-coordinate
@@ -158,7 +160,8 @@ void update_grid_locations_x(
     vec<pair<int>>& grid_locations){
 
     int k = -1;
-    for(R2Mat& M : indecomps){
+    for(auto& indecomp : indecomps){
+        R2Mat& M = module_presentation(indecomp);
         k++;
         int& local_x = grid_locations[k].first;
         
@@ -266,7 +269,8 @@ void process_grid_cell(
     
     bool track= false;
     int k = -1;
-    for(auto & M : indecomps){
+    for(auto& indecomp : indecomps){
+        R2Mat& M = module_presentation(indecomp);
         vec<HN_factors> test_factors = vec<HN_factors>();
         vec<HN_factors> copy_factors =  vec<HN_factors>();
         k++;
@@ -452,7 +456,8 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
     // because for reduced homology the modules are bounded in this direction.
 
     
-    for (auto& B : indecomps) {
+    for (auto& indecomp : indecomps) {
+        R2Mat& B = module_presentation(indecomp);
         // Now cutting the module off at the slope bound, so that we do not have to deal with unbounded modules anymore,
         //  which has caused bugs in the past.
         B.bound_support(slope_bounds.second);
@@ -478,7 +483,8 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
 
         bool track = false;
 
-        for(auto& B : indecomps){
+        for(auto& indecomp : indecomps){
+            R2Mat& B = module_presentation(indecomp);
             indecomp_index++;
 
             auto B_induced = B.submodule_generated_at(current_grid_degree);
@@ -604,7 +610,8 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     auto [lower_bound, upper_bound, grid_step, slope_bounds] = compute_bounds_and_grid(indecomps, first_ind_dimensions, grid_length_x, grid_length_y);
     write_grid_metadata(ostream, grid_length_x, grid_length_y, lower_bound, upper_bound, grid_step, slope_bounds, show_info);
 
-    for (auto& B : indecomps) {
+    for (auto& indecomp : indecomps) {
+        R2Mat& B = module_presentation(indecomp);
         // Now cutting the module off at the slope bound, so that we do not have to deal with unbounded modules anymore,
         //  which has caused bugs in the past.
         B.bound_support(slope_bounds.second);
@@ -692,11 +699,14 @@ void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     if(is_decomposed){
         vec<R2Mat> matrices;
         graded_linalg::read_sccsum(matrices, istream);
+        vec<R2PModule> modules;
+        modules.reserve(matrices.size());
+        for (auto& matrix : matrices) modules.emplace_back(std::move(matrix));
         vec<r2degree> grid_points;
         if(dynamic_grid){
-            process_summands_smart_grid(decomposer, ostream, grid_length_x, grid_length_y, matrices);
+            process_summands_smart_grid(decomposer, ostream, grid_length_x, grid_length_y, modules);
         } else {
-            process_summands_fixed_grid(decomposer, ostream, grid_length_x, grid_length_y, matrices);
+            process_summands_fixed_grid(decomposer, ostream, grid_length_x, grid_length_y, modules);
         }
     } else {
         aida::Block_list B_list;

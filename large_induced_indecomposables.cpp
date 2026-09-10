@@ -9,11 +9,12 @@ using namespace graded_linalg;
 
 
 
-void large_induced_indecomp_submodules(R2GradedSparseMatrix<int>& pres, 
+void large_induced_indecomp_submodules(R2Module<int>& module,
     std::filesystem::path output_dir, 
     vec<int>& counter ) {
 
     aida::AIDA_functor decomposer = aida::AIDA_functor();
+    R2GradedSparseMatrix<int>& pres = module.mutable_presentation();
     pres.compute_grid_representation();
     pres.sort_columns_lexicographically();
     pres.compute_col_batches();
@@ -98,7 +99,8 @@ void large_induced_indecomp_submodules_from_sum(std::filesystem::path input_path
     read_sccsum<int, std::ifstream>(matrices, input_file);
     vec<int> counter = vec<int>(50,0);
     for(auto& pres : matrices){
-        large_induced_indecomp_submodules(pres, output_dir, counter);
+        R2Module<int> module(std::move(pres));
+        large_induced_indecomp_submodules(module, output_dir, counter);
     }
 }
 
@@ -128,9 +130,9 @@ int main(int argc, char** argv) {
     if (is_decomp_file(input_path)) {
         large_induced_indecomp_submodules_from_sum(input_path, output_dir);
     } else {
-        R2GradedSparseMatrix<int> pres = R2GradedSparseMatrix<int>(input_path.string());
+        R2Module<int> module(input_path.string());
         vec<int> counter = vec<int>(50,0);
-        large_induced_indecomp_submodules(pres, output_dir, counter);
+        large_induced_indecomp_submodules(module, output_dir, counter);
     }
     
     return 0;

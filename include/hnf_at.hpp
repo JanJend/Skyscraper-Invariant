@@ -31,12 +31,20 @@ void skyscraper_invariant(const R2Mat& input,
     vec<vec<vec<SparseMatrix<int>>>>& subspaces,
     const pair<r2degree>& bounds, const bool filter = false);
 
+inline void skyscraper_invariant(const R2PModule& input,
+    vec<HN_factors>& result,
+    vec<vec<vec<SparseMatrix<int>>>>& subspaces,
+    const pair<r2degree>& bounds, const bool filter = false) {
+    skyscraper_invariant(input.presentation(), result, subspaces, bounds, filter);
+}
+
 template<typename Container>
 vec<HN_factors> skyscraper_invariant_sum(Container& summands,
         vec<vec<vec<SparseMatrix<int>>>>& subspaces,
         const pair<r2degree>& bounds, const bool filter = false) {
     vec<HN_factors> result;
-    for(R2Mat& X : summands){
+    for(auto& summand : summands){
+        R2Mat& X = module_presentation(summand);
         skyscraper_invariant(X, result, subspaces, bounds, filter);
     }
     return result;
@@ -47,7 +55,8 @@ void skyscraper_invariant_sum_append(Container& summands,
         vec<HN_factors> & result,
         vec<vec<vec<SparseMatrix<int>>>>& subspaces,
         const pair<r2degree>& bounds, const bool filter = false) {
-    for(R2Mat& X : summands){
+    for(auto& summand : summands){
+        R2Mat& X = module_presentation(summand);
         if(X.get_num_rows() == 0){
             continue;
         } else if(X.get_num_rows() == 1){

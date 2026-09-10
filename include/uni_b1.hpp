@@ -10,6 +10,18 @@ using namespace graded_linalg;
 namespace hnf{
 
 using R2Mat = R2GradedSparseMatrix<int>;
+using R2PModule = R2Module<int>;
+
+inline R2Mat& module_presentation(R2Mat& matrix) { return matrix; }
+inline const R2Mat& module_presentation(const R2Mat& matrix) { return matrix; }
+inline R2Mat& module_presentation(R2PModule& module) { return module.mutable_presentation(); }
+inline const R2Mat& module_presentation(const R2PModule& module) { return module.presentation(); }
+
+template <typename MatrixLike>
+R2Mat& module_presentation(MatrixLike& matrix) { return static_cast<R2Mat&>(matrix); }
+
+template <typename MatrixLike>
+const R2Mat& module_presentation(const MatrixLike& matrix) { return static_cast<const R2Mat&>(matrix); }
 
 // Forward declarations
 
@@ -28,6 +40,8 @@ struct Uni_B1 : R2Resolution<int> {
     Uni_B1() = default;
     Uni_B1(R2Mat&& d1_, bool is_minimal = false);
     Uni_B1(const R2Mat& d1_, bool is_minimal = false);
+    Uni_B1(const R2PModule& module, bool is_minimal = false)
+        : Uni_B1(module.presentation(), is_minimal) {}
 
     // Copy constructor
     Uni_B1(const Uni_B1& other) 

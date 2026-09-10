@@ -7,9 +7,9 @@ using namespace hnf;
 
 void hnf_at_origin(std::filesystem::path input_path, r2degree upper_bound, bool filter) {
     
-    R2GradedSparseMatrix<int> X = R2GradedSparseMatrix<int>(input_path.string());
-    int dim = X.get_num_rows();
-    pair<r2degree> bounds = X.bounding_box();
+    R2PModule X(input_path.string());
+    int dim = X.number_of_generators();
+    pair<r2degree> bounds = X.presentation().bounding_box();
     if(upper_bound != r2degree{0,0}){
         bounds.second = upper_bound;
     } else {

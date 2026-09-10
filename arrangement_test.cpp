@@ -15,7 +15,8 @@ void get_arrangement(std::filesystem::path& input_path,
         return;
     }
 
-    R2GradedSparseMatrix<int> M(input_path.string());
+    R2PModule module(input_path.string());
+    R2GradedSparseMatrix<int>& M = module.mutable_presentation();
     int k = M.get_num_rows();
     auto perm = M.compute_grid_representation();
     pair<r2degree> bounding_box = M.bounding_box();
@@ -37,7 +38,7 @@ void get_arrangement(std::filesystem::path& input_path,
     // cell_boundary = {2, 2};
     std::cout << "Computing arrangement in the box: (" << cell_start.first << ", " << cell_start.second 
         << ") to (" << cell_boundary.first << ", " << cell_boundary.second << ")\n";
-    Uni_B1 M_res(M);
+    Uni_B1 M_res(module);
     auto subspaces = all_sparse_subspaces(k);
     Slope_subdivision slope_subdiv = compute_slope_subdivision(M_res, bounding_box, subspaces, cell_start, cell_boundary);
     slope_subdiv.export_to_svg(output_path.string(), bounding_box.first.first, bounding_box.first.second);
