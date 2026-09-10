@@ -371,6 +371,7 @@ Slope_subdivision compute_slope_subdivision(Uni_B1& res,
             std::exit(1);
     }
     vec<R2Mat> submodules = vec<R2Mat>();
+    X.sort_compatibly();
     for(size_t i = 1; i < subspaces[k-1].size(); i++){
         //skip i = 0, because it is the empty space
         auto ungraded_subspace = subspaces[k-1][i];

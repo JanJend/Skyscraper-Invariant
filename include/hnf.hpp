@@ -383,6 +383,7 @@ void process_grid_cell(
                 // TO-DO: summand is the original local summand, we need to cut it off at the current grid degree,
                 // Even if the slope is already correctly computed by the polynomial.
                 shifted_summand.d1.set_all_generator_degrees(current_grid_degree);
+                shifted_summand.d1.sort_compatibly();
                 shifted_summand.d1.column_reduction_graded();
                 shifted_summand.slope_value = slope;
                 HN_factors singleton = HN_factors();
