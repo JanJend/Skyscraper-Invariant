@@ -94,7 +94,7 @@ std::tuple<r2degree, r2degree, r2degree, pair<r2degree>> compute_bounds_and_grid
 
     auto [lower_bound, upper_bound] = module_presentation(indecomps.front()).bounding_box();
     for (auto& indecomp : indecomps) {
-        R2Mat& M = module_presentation(indecomp);
+        auto&& M = module_presentation(indecomp);
         // Get a Grid for each component, so that we do not have to recompoute the submodules and their decomposition
         M.compute_grid_representation();
         first_ind_dimensions.push_back(M.get_num_rows());
@@ -123,7 +123,7 @@ void update_HNF_rows_at_y_level(
 
     int k = -1;
     for(auto& indecomp : indecomps){
-        R2Mat& M = module_presentation(indecomp);
+        auto&& M = module_presentation(indecomp);
         k++;
         bool recompute = false;
         grid_locations[k].first = -1; // Reset x-coordinate
@@ -161,7 +161,7 @@ void update_grid_locations_x(
 
     int k = -1;
     for(auto& indecomp : indecomps){
-        R2Mat& M = module_presentation(indecomp);
+        auto&& M = module_presentation(indecomp);
         k++;
         int& local_x = grid_locations[k].first;
         
@@ -270,7 +270,7 @@ void process_grid_cell(
     bool track= false;
     int k = -1;
     for(auto& indecomp : indecomps){
-        R2Mat& M = module_presentation(indecomp);
+        auto&& M = module_presentation(indecomp);
         vec<HN_factors> test_factors = vec<HN_factors>();
         vec<HN_factors> copy_factors =  vec<HN_factors>();
         k++;
@@ -458,7 +458,7 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
 
     
     for (auto& indecomp : indecomps) {
-        R2Mat& B = module_presentation(indecomp);
+        auto&& B = module_presentation(indecomp);
         // Now cutting the module off at the slope bound, so that we do not have to deal with unbounded modules anymore,
         //  which has caused bugs in the past.
         B.bound_support(slope_bounds.second);
@@ -485,7 +485,7 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
         bool track = false;
 
         for(auto& indecomp : indecomps){
-            R2Mat& B = module_presentation(indecomp);
+            auto&& B = module_presentation(indecomp);
             indecomp_index++;
 
             auto B_induced = B.submodule_generated_at(current_grid_degree);
@@ -612,7 +612,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     write_grid_metadata(ostream, grid_length_x, grid_length_y, lower_bound, upper_bound, grid_step, slope_bounds, show_info);
 
     for (auto& indecomp : indecomps) {
-        R2Mat& B = module_presentation(indecomp);
+        auto&& B = module_presentation(indecomp);
         // Now cutting the module off at the slope bound, so that we do not have to deal with unbounded modules anymore,
         //  which has caused bugs in the past.
         B.bound_support(slope_bounds.second);

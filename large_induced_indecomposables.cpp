@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <file_path> " << std::endl;
-        input_path = "/home/wsljan/MP-Workspace/Skyscraper-Invariant/example_files/presentations/torus3.sccsum";
+        return 1;
     } else {
         input_path = argv[1];
     }

@@ -55,8 +55,7 @@ int main(int argc, char** argv) {
     if (argc < 2 || argc > 3) {
         std::cerr << "Usage: " << argv[0] << " <file_path> [optional_value] \n";
         std::cerr << "  optional_value = 0 \n";
-        filepath = "/home/jan/MP-Workspace/Skyscraper-Invariant/example_files/presentations/torus3_induced/2_0.scc";
-        input_path = std::filesystem::path(filepath);
+        return 1;
     } else {
         filepath = argv[1];
         input_path = std::filesystem::path(filepath);

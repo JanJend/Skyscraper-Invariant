@@ -3,45 +3,19 @@
 namespace hnf {
 
 Uni_B1::Uni_B1(R2Mat&& d1_, bool is_minimal)
-    : R2Resolution<int>(std::move(d1_)) {
-    if(is_minimal && d1.get_num_rows() == 1){
-        assert(std::is_sorted(d1.col_degrees.begin(), d1.col_degrees.end(), Degree_traits<r2degree>::lex_lambda()));
-        d2 = R2Mat(d1.get_num_cols()-1, d1.get_num_cols());
-        d2.data = vec< vec<int> >(d1.get_num_cols()-1);
-        d2.row_degrees = d1.col_degrees;
-        d2.col_degrees = vec<r2degree>(d1.get_num_cols()-1);
-        r2degree last_degree = d1.col_degrees[0];
-        for(int i = 1; i < d1.get_num_cols(); i++){
-            r2degree join = Degree_traits<r2degree>::join(last_degree, d1.col_degrees[i]);
-            d2.data[i] = {i -1, i};
-            d2.col_degrees[i] = join;
-            last_degree = d1.col_degrees[i];
-        }
-    } else {
-        auto d1_copy = d1;
-        d2 = d1_copy.graded_kernel();
-    }
-}
-
+    : R2Resolution<int>(d1_, is_minimal) {}
 
 Uni_B1::Uni_B1(const R2Mat& d1_, bool is_minimal)
-    : R2Resolution<int>(d1_) {
-    if(is_minimal && d1.get_num_rows() == 1){
-        assert(std::is_sorted(d1.col_degrees.begin(), d1.col_degrees.end(), Degree_traits<r2degree>::lex_lambda()));
-        d2 = R2Mat(d1.get_num_cols()-1, d1.get_num_cols());
-        d2.data = vec< vec<int> >(d1.get_num_cols()-1);
-        d2.row_degrees = d1.col_degrees;
-        d2.col_degrees = vec<r2degree>(d1.get_num_cols()-1);
-        r2degree last_degree = d1.col_degrees[0];
-        for(int i = 1; i < d1.get_num_cols(); i++){
-            r2degree join = Degree_traits<r2degree>::join(last_degree, d1.col_degrees[i]);
-            d2.data[i] = {i -1, i};
-            d2.col_degrees[i] = join;
-            last_degree = d1.col_degrees[i];
-        }
+    : R2Resolution<int>(d1_, is_minimal) {}
+
+Uni_B1::Uni_B1(const R2PModule& module, bool is_minimal) {
+    if (module.projective_resolution().size() > 1) {
+        d1 = module.presentation();
+        d2 = module.projective_resolution()[1];
     } else {
-        auto d1_copy = d1;
-        d2 = d1_copy.graded_kernel();
+        const R2Resolution<int> resolution(module.presentation(), is_minimal);
+        d1 = resolution.d1;
+        d2 = resolution.d2;
     }
 }
 
