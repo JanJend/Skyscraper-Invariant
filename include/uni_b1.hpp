@@ -10,6 +10,26 @@ using namespace graded_linalg;
 namespace hnf{
 
 using R2Mat = R2GradedSparseMatrix<int>;
+using R2PModule = R2Module<int>;
+
+inline R2Mat& module_presentation(R2Mat& matrix) { return matrix; }
+inline const R2Mat& module_presentation(const R2Mat& matrix) { return matrix; }
+// Invariant algorithms reorder columns and compute scratch grid state. Give
+// them a working copy so querying a module preserves every resolution map.
+inline R2Mat module_presentation(const R2PModule& module) {
+    R2Mat working = module.presentation();
+    working.compute_grid_representation();
+    return working;
+}
+inline R2Mat module_presentation(R2PModule& module) {
+    return module_presentation(static_cast<const R2PModule&>(module));
+}
+
+template <typename MatrixLike>
+R2Mat& module_presentation(MatrixLike& matrix) { return static_cast<R2Mat&>(matrix); }
+
+template <typename MatrixLike>
+const R2Mat& module_presentation(const MatrixLike& matrix) { return static_cast<const R2Mat&>(matrix); }
 
 // Forward declarations
 
@@ -28,6 +48,7 @@ struct Uni_B1 : R2Resolution<int> {
     Uni_B1() = default;
     Uni_B1(R2Mat&& d1_, bool is_minimal = false);
     Uni_B1(const R2Mat& d1_, bool is_minimal = false);
+    Uni_B1(const R2PModule& module, bool is_minimal = false);
 
     // Copy constructor
     Uni_B1(const Uni_B1& other) 

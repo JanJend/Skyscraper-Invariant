@@ -209,20 +209,7 @@ FileInfo resolve_input_file(int argc, char** argv, bool test_files, bool& is_dec
     } else if (test_files) {
         // Do nothing - test files handled separately
     } else {
-        // No file provided and not in test mode - use default test file
-        fs::path default_test_file = "/home/jan/MP-Workspace/data/hypoxic1_log/hypoxic1_FoxP3_logdensity_H1.scc";
-        
-        file_info.matrix_path = default_test_file.string();
-        file_info.input_directory = default_test_file.parent_path().string();
-        file_info.filename = default_test_file.filename().string();
-        
-        size_t dot_position = file_info.filename.find_last_of('.');
-        file_info.file_without_extension = (dot_position == std::string::npos) 
-            ? file_info.filename 
-            : file_info.filename.substr(0, dot_position);
-        
-        is_decomposed = false;
-        std::cout << "No input file specified. Running on test file: " << file_info.matrix_path << std::endl;
+        std::cerr << "No input file specified. Supply a local SCC or SCC-sum path.\n";
     }
     
     return file_info;
@@ -289,6 +276,7 @@ int main(int argc, char** argv) {
     }
     
     FileInfo file_info = resolve_input_file(argc, argv, config.test_files, config.is_decomposed);
+    if (!config.test_files && file_info.matrix_path.empty()) return 1;
     
     if (!config.test_files) {
         std::ostringstream ostream;

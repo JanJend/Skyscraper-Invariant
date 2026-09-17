@@ -151,6 +151,24 @@ add_executable(random_uni_B1
     random_uni_B1.cpp
 )
 
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(module_adapter_test tests/module_adapter_test.cpp src/uni_b1.cpp)
+    target_link_libraries(module_adapter_test ${Boost_TIMER_LIBRARY} ${Boost_CHRONO_LIBRARY})
+    if(MSVC)
+        target_compile_options(module_adapter_test PRIVATE /UNDEBUG)
+    else()
+        target_compile_options(module_adapter_test PRIVATE -UNDEBUG)
+    endif()
+    add_test(NAME module_adapter_test COMMAND module_adapter_test)
+    foreach(_cli arrangement_test large_induced_indecomposables filt_landscape_from_sky)
+        add_test(NAME ${_cli}_requires_input COMMAND $<TARGET_FILE:${_cli}>)
+        set_tests_properties(${_cli}_requires_input PROPERTIES WILL_FAIL TRUE)
+    endforeach()
+    add_test(NAME hnf_main_requires_input COMMAND $<TARGET_FILE:hnf_main> --)
+    set_tests_properties(hnf_main_requires_input PROPERTIES WILL_FAIL TRUE)
+endif()
+
 if(BUILD_EXP)
     install(TARGETS large_induced_indecomposables hnf_at_origin
         RUNTIME DESTINATION bin
@@ -160,4 +178,3 @@ else()
         RUNTIME DESTINATION bin
     )
 endif()
-

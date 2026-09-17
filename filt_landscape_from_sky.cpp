@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
         return 1;
     } 
     
-    std::string input_file = (argc >= 2) ? argv[1] : "/home/wsljan/MP-Workspace/data/hypoxic_regions/hypoxic2_FoxP3_dim1_200x200_res.sky";
+    std::string input_file = argv[1];
     
     double theta = (argc >= 3) ? std::stod(argv[2]) : 0.0;
     int k = (argc >= 4) ? std::stoi(argv[3]) : 1;
