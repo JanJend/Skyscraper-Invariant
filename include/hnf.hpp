@@ -688,8 +688,28 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     calculate_stats(all_scss_dimensions);
 }
 
+// Keep one working presentation per module for the entire grid computation:
+// support bounds and grid state must survive between successive grid cells.
 template <typename Outputstream>
-void full_grid_induced_decomposition(aida::AIDA_functor& decomposer, 
+void process_summands_fixed_grid(aida::AIDA_functor& decomposer, Outputstream& out,
+    const int& nx, const int& ny, vec<R2PModule>& modules) {
+    vec<R2Mat> working;
+    working.reserve(modules.size());
+    for (const auto& module : modules) working.push_back(module.presentation());
+    process_summands_fixed_grid(decomposer, out, nx, ny, working);
+}
+
+template <typename Outputstream>
+void process_summands_smart_grid(aida::AIDA_functor& decomposer, Outputstream& out,
+    const int& nx, const int& ny, vec<R2PModule>& modules, const bool restrict_dim = true) {
+    vec<R2Mat> working;
+    working.reserve(modules.size());
+    for (const auto& module : modules) working.push_back(module.presentation());
+    process_summands_smart_grid(decomposer, out, nx, ny, working, restrict_dim);
+}
+
+template <typename Outputstream>
+void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
     std::ifstream& istream, Outputstream& ostream, 
     bool show_indecomp_statistics, bool show_runtime_statistics, 
     bool dynamic_grid = true,
