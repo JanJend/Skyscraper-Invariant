@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
-project(skyscraper VERSION 1.0 LANGUAGES CXX)
+project(skyscraper VERSION 0.2.1 LANGUAGES CXX)
+add_compile_definitions(SKYSCRAPER_VERSION="${PROJECT_VERSION}")
 
 # Set C++ standard (overridable on the command line for testing newer standards)
 if(NOT DEFINED CMAKE_CXX_STANDARD)

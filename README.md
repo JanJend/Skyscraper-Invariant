@@ -1,5 +1,7 @@
 # Skyscraper Invariant
 
+Current version: **0.2.1**
+
 Software for computing the Skyscraper invariant of persistence modules over $\mathbb{R}^2$.
 
 **Author:** Jan Jendrysiak  
