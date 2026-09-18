@@ -263,7 +263,7 @@ void display_help() {
 }
 
 void display_version() {
-    std::cout << "Skyscraper Invariant version 0.2 -- 23rd Mar 2026\n";
+    std::cout << "Skyscraper Invariant version " SKYSCRAPER_VERSION "\n";
 }
 
 

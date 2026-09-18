@@ -1,4 +1,4 @@
-#include "uni_b1.hpp"
+#include "hnf.hpp"
 #include <cassert>
 
 int main() {
@@ -26,4 +26,28 @@ int main() {
     R2Mat free(0, 1, {}, {}, {{0,0}});
     Uni_B1 free_interval(free, true);
     assert(free_interval.d2.get_num_cols() == 0);
+
+    // A relation at (1,1) leaves unbounded strips. Both grid algorithms
+    // must retain their support cutoff while preserving the supplied module.
+    R2PModule strip(R2Mat(1, 1, {{0}}, {{1,1}}, {{0,0}}));
+    strip.compute_projective_resolution();
+    for (bool smart : {false, true}) {
+        vec<R2PModule> modules{strip};
+        vec<R2Mat> matrices{strip.presentation()};
+        aida::AIDA_functor from_module, from_matrix;
+        from_module.config.show_info = from_matrix.config.show_info = false;
+        from_module.config.progress = from_matrix.config.progress = false;
+        std::ostringstream module_output, matrix_output;
+        if (smart) {
+            process_summands_smart_grid(from_module, module_output, 3, 3, modules);
+            process_summands_smart_grid(from_matrix, matrix_output, 3, 3, matrices);
+        } else {
+            process_summands_fixed_grid(from_module, module_output, 3, 3, modules);
+            process_summands_fixed_grid(from_matrix, matrix_output, 3, 3, matrices);
+        }
+        assert(module_output.str() == matrix_output.str());
+        assert(modules[0].presentation().data == strip.presentation().data);
+        assert(modules[0].presentation().col_degrees == strip.presentation().col_degrees);
+        assert(modules[0].has_complete_projective_resolution());
+    }
 }
