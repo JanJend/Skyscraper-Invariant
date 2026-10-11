@@ -9,13 +9,13 @@ void hnf_at_origin(std::filesystem::path input_path, r2degree upper_bound, bool 
     
     R2PModule X(input_path.string());
     int dim = X.number_of_generators();
-    pair<r2degree> bounds = X.presentation().bounding_box();
+    pair<r2degree> bounds = geometry_bounds(X.presentation());
     if(upper_bound != r2degree{0,0}){
         bounds.second = upper_bound;
     } else {
         double padding = 0.1;
         r2degree range = bounds.second - bounds.first;
-        bounds.second = bounds.second + r2degree{padding*range.first, padding*range.second};
+        bounds.second = bounds.second + r2degree{padding*range[0], padding*range[1]};
     }
     vec<vec<vec<SparseMatrix<int>>>> subspaces = sparse_seperated_grassmannians<int>(dim);
     vec<HN_factors> result;
@@ -23,7 +23,7 @@ void hnf_at_origin(std::filesystem::path input_path, r2degree upper_bound, bool 
     assert(result.size() == 1);
     for(auto& factor : result[0]){
         std::cout << "Slope: " << factor.slope_value << " Module: \n";
-        factor.d1.to_stream_r2(std::cout);
+        factor.d1.to_stream(std::cout);
     }
 }
 

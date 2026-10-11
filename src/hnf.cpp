@@ -35,10 +35,10 @@ void calculate_stats(const std::vector<int>& all_dimensions) {
 
 vec<r2degree> get_grid_diagonal(pair<r2degree> bounds, int grid_length) {
     vec<r2degree> grid_diagonal = vec<r2degree>();
-    double x_min = bounds.first.first;
-    double x_max = bounds.second.first;
-    double y_min = bounds.first.second;
-    double y_max = bounds.second.second;
+    double x_min = bounds.first[0];
+    double x_max = bounds.second[0];
+    double y_min = bounds.first[1];
+    double y_max = bounds.second[1];
 
     double x_step = (x_max - x_min) / (grid_length - 1);
     double y_step = (y_max - y_min) / (grid_length - 1);
@@ -51,10 +51,10 @@ vec<r2degree> get_grid_diagonal(pair<r2degree> bounds, int grid_length) {
 
 r2degree get_grid_step(const r2degree& lower_bound, const r2degree& upper_bound,
     const int& grid_length_x, const int& grid_length_y) {
-    const double& x_min = lower_bound.first;
-    const double& x_max = upper_bound.first;
-    const double& y_min = lower_bound.second;
-    const double& y_max = upper_bound.second;
+    const double& x_min = lower_bound[0];
+    const double& x_max = upper_bound[0];
+    const double& y_min = lower_bound[1];
+    const double& y_max = upper_bound[1];
 
     double x_step = (x_max - x_min) / (grid_length_x - 1);
     double y_step = (y_max - y_min) / (grid_length_y - 1);
@@ -160,24 +160,24 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
         R2Mat& M, int& y_index, pair<r2degree> slope_bounds,
         const vec<vec<vec<SparseMatrix<int>>>>& subspaces) {
     assert(y_index > -1);
-    double y_coordinate = M.y_grid[y_index];
-    int x_length = M.x_grid.size();
+    double y_coordinate = M.grid(1)[y_index];
+    int x_length = M.grid(0).size();
     double y_next;
-    if(y_index < M.y_grid.size()-1){
-        y_next = M.y_grid[y_index+1];
+    if(y_index < M.grid(1).size()-1){
+        y_next = M.grid(1)[y_index+1];
     } else {
-        y_next = slope_bounds.second.second;
+        y_next = slope_bounds.second[1];
     }
     indecomposable_summands = vec<vec<Uni_B1>>(x_length, vec<Uni_B1>());
     int max_dim = 0;
 
     for(int x_index = 0; x_index < x_length; x_index++){
-        r2degree grid_point = {M.x_grid[x_index], y_coordinate};
+        r2degree grid_point = {M.grid(0)[x_index], y_coordinate};
         double next_x;
-        if(x_index < M.x_grid.size()-1){
-            next_x = M.x_grid[x_index+1];
+        if(x_index < M.grid(0).size()-1){
+            next_x = M.grid(0)[x_index+1];
         } else {
-            next_x = slope_bounds.second.first;
+            next_x = slope_bounds.second[0];
         }
         auto M_induced = M.submodule_generated_at(grid_point);
         if(M_induced.get_num_rows() == 0){
@@ -190,7 +190,6 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
             grid_ind_dimensions.push_back(1);
         } else {
             aida::Block_list sub_M_list;
-            M_induced.compute_col_batches();
             decomposer(M_induced, sub_M_list);
             for(Block sub_M : sub_M_list){
                 if(sub_M.get_num_rows() > max_dim){
@@ -204,7 +203,7 @@ void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
                 int dim = current_summand.d1.get_num_rows();
                 if(false){
                     if(dim > 2){
-                        current_summand.d1.to_stream_r2(std::cout);
+                        current_summand.d1.to_stream(std::cout);
                     }
                 }
 

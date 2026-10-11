@@ -43,8 +43,9 @@ template< typename Outputstream>
 void to_stream(Outputstream& ostream, Uni_B1& scss){
     if(scss.d1.get_num_rows() == 1){
         ostream << scss.slope_value;
-        for(r2degree d : scss.d1.col_degrees){
-            ostream << "," << "(" << d.first << ";" << d.second << ")";
+        for(int column = 0; column < scss.d1.get_num_cols(); ++column){
+            const auto d = real_col_degree(scss.d1, column);
+            ostream << "," << "(" << d[0] << ";" << d[1] << ")";
         }
         ostream << std::endl;
     } else {
@@ -92,17 +93,16 @@ std::tuple<r2degree, r2degree, r2degree, pair<r2degree>> compute_bounds_and_grid
     const double range_extension = 0.1;
     const double slope_overlap = 0.1;
 
-    auto [lower_bound, upper_bound] = module_presentation(indecomps.front()).bounding_box();
+    auto [lower_bound, upper_bound] = geometry_bounds(module_presentation(indecomps.front()));
     for (auto& indecomp : indecomps) {
         auto&& M = module_presentation(indecomp);
         // Get a Grid for each component, so that we do not have to recompoute the submodules and their decomposition
-        M.compute_grid_representation();
         first_ind_dimensions.push_back(M.get_num_rows());
 
         // TO-DO: There was a computation error here, the upper bound is not computed correctly?
         
-        lower_bound = Degree_traits<r2degree>::meet(lower_bound, {M.x_grid[0], M.y_grid[0]});
-        upper_bound = Degree_traits<r2degree>::join(upper_bound, {M.x_grid.back(), M.y_grid.back()});
+        lower_bound = Degree_traits<r2degree>::meet(lower_bound, {M.grid(0)[0], M.grid(1)[0]});
+        upper_bound = Degree_traits<r2degree>::join(upper_bound, {M.grid(0).back(), M.grid(1).back()});
     }
 
     upper_bound = upper_bound + range_extension*(upper_bound - lower_bound);
@@ -128,11 +128,11 @@ void update_HNF_rows_at_y_level(
         bool recompute = false;
         grid_locations[k].first = -1; // Reset x-coordinate
         int& local_y = grid_locations[k].second;
-        if(local_y + 1 == static_cast<int>(M.y_grid.size()) ){
+        if(local_y + 1 == static_cast<int>(M.grid(1).size()) ){
             // Do nothing for now
         } else {
-            while(local_y + 1 < static_cast<int>(M.y_grid.size())){
-                if(current_grid_degree.second >= M.y_grid[local_y + 1]){
+            while(local_y + 1 < static_cast<int>(M.grid(1).size())){
+                if(current_grid_degree[1] >= M.grid(1)[local_y + 1]){
                     local_y++;
                     recompute = true;
                 } else {
@@ -145,9 +145,9 @@ void update_HNF_rows_at_y_level(
             local_grid_row_data[k].compute_HNF_row(decomposer, M, local_y, slope_bounds, subspaces);
         }
         if(local_y != -1){
-            assert(current_grid_degree.second >= M.y_grid[local_y] );
-            if( local_y +1 < static_cast<int>(M.y_grid.size())){
-                assert(current_grid_degree.second < M.y_grid[local_y + 1]);
+            assert(current_grid_degree[1] >= M.grid(1)[local_y] );
+            if( local_y +1 < static_cast<int>(M.grid(1).size())){
+                assert(current_grid_degree[1] < M.grid(1)[local_y + 1]);
             } 
         }
     }
@@ -165,16 +165,16 @@ void update_grid_locations_x(
         k++;
         int& local_x = grid_locations[k].first;
         
-        if(local_x + 1 == static_cast<int>(M.x_grid.size()) ){
+        if(local_x + 1 == static_cast<int>(M.grid(0).size()) ){
             
         } else {
             if(false){
                 std::cout << std::setprecision(12);
                 std::cout << "  Updating x grid locations at grid degree " << current_grid_degree << std::endl;
                 std::cout << "  local_x: " << local_x << std::endl;
-                std::cout << "  M.x_grid for the next value: " << M.x_grid[local_x + 1] << std::endl;
+                std::cout << "  M.grid(0) for the next value: " << M.grid(0)[local_x + 1] << std::endl;
                 std::cout << std::endl;
-                if(local_x + 1 < static_cast<int>(M.x_grid.size()) ){
+                if(local_x + 1 < static_cast<int>(M.grid(0).size()) ){
                     std::cout << " Not at end yet. " << std::endl;
                     auto B_induced = M.submodule_generated_at(current_grid_degree);
                     std::cout << B_induced.get_num_rows() << " rows in the induced submodule at the current grid degree." << std::endl;
@@ -184,10 +184,10 @@ void update_grid_locations_x(
                         M.print_graded();
                         std::cout << "  The induced submodule has presentation " << std::endl;
                         B_induced.print_graded();
-                        if(current_grid_degree.first >= M.x_grid[local_x + 1]){
+                        if(current_grid_degree[0] >= M.grid(0)[local_x + 1]){
                             std::cout << "moving forward as planned.   " << std::endl;
                         } else {
-                            std::cout << "M_xgrid[local_x + 1] is " << M.x_grid[local_x + 1] << std::endl;
+                            std::cout << "M_xgrid[local_x + 1] is " << M.grid(0)[local_x + 1] << std::endl;
                             std::cout << "  But the current grid degree is smaller than the next x grid point, so we should not move forward yet." << std::endl;
                             std::cout << "  This should not happen, check the grid computation." << std::endl;
                         }
@@ -196,8 +196,8 @@ void update_grid_locations_x(
                     
                 }
             }
-            while(local_x + 1 < static_cast<int>(M.x_grid.size()) ){
-                if(current_grid_degree.first >= M.x_grid[local_x + 1]){
+            while(local_x + 1 < static_cast<int>(M.grid(0).size()) ){
+                if(current_grid_degree[0] >= M.grid(0)[local_x + 1]){
                     local_x++;
                 } else {
                     break;
@@ -205,9 +205,9 @@ void update_grid_locations_x(
             }
         }
         if(local_x != -1){
-            assert(current_grid_degree.first >= M.x_grid[local_x]);
-            if( local_x + 1 < static_cast<int>(M.x_grid.size()) ){
-                assert(current_grid_degree.first < M.x_grid[local_x + 1]);
+            assert(current_grid_degree[0] >= M.grid(0)[local_x]);
+            if( local_x + 1 < static_cast<int>(M.grid(0).size()) ){
+                assert(current_grid_degree[0] < M.grid(0)[local_x + 1]);
             } 
         }
     }
@@ -294,7 +294,7 @@ void process_grid_cell(
             // We're not in the local grid yet, so can skip this summand.
             continue;
         } else {
-            local_grid_degree = std::make_pair(M.x_grid[local_grid_index.first], M.y_grid[local_grid_index.second]);
+            local_grid_degree = {M.grid(0)[local_grid_index.first], M.grid(1)[local_grid_index.second]};
         }
 
         
@@ -307,7 +307,6 @@ void process_grid_cell(
             auto B_induced = M.submodule_generated_at(current_grid_degree);
             if(B_induced.get_num_rows() != 0){
                 Block_list sub_B_list;
-                B_induced.compute_col_batches();
                 decomposer(B_induced, sub_B_list);
                 assert(local_summands.size() == sub_B_list.size());
                 int k = 0;
@@ -348,7 +347,7 @@ void process_grid_cell(
                     std::cout << "  Slope bounds: " << slope_bounds.first << " " << slope_bounds.second << std::endl;
                     std::cout << "  Module: " << std::endl;
                     shifted_summand.d1.print_graded();
-                    std::cout << "  range_area " << (slope_bounds.second.first - slope_bounds.first.first) * (slope_bounds.second.second - slope_bounds.first.second) << std::endl;
+                    std::cout << "  range_area " << (slope_bounds.second[0] - slope_bounds.first[0]) * (slope_bounds.second[1] - slope_bounds.first[1]) << std::endl;
                     assert(false);
                 }
                 if(test){
@@ -373,7 +372,7 @@ void process_grid_cell(
                             std::cout << "  Verschiebung: " << verschiebung << std::endl;
                             std::cout << "  Slope bounds: " << slope_bounds.first << " " << slope_bounds.second << std::endl;
                             auto normalisation = slope_bounds.second - slope_bounds.first;
-                            std::cout << "  Normalisation area: " << normalisation.first * normalisation.second << std::endl;
+                            std::cout << "  Normalisation area: " << normalisation[0] * normalisation[1] << std::endl;
                             std::cout << "  Cut off summand: " << std::endl;
                             test_summand.d1.print_graded();
                             assert(false);
@@ -421,7 +420,10 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
     Outputstream& ostream, 
     const int& grid_length_x, const int& grid_length_y, 
     Container& indecomps) {
-    
+    if constexpr (needs_editable_presentation_v<typename Container::value_type> || std::is_const_v<Container>) {
+        auto working = editable_presentations(indecomps);
+        process_summands_fixed_grid(decomposer, ostream, grid_length_x, grid_length_y, working);
+    } else {
     
     bool progress_bar = false;
     if (decomposer.config.progress){
@@ -469,7 +471,7 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
 
     r2degree current_grid_degree = lower_bound;
     for(int j = 0; j < grid_length_y; j++){
-        current_grid_degree.first = lower_bound.first; // Reset x-coordinate for each y-coordinate
+        current_grid_degree[0] = lower_bound[0]; // Reset x-coordinate for each y-coordinate
         for(int i = 0; i < grid_length_x; i++){ 
       
         composition_factors.clear();
@@ -515,7 +517,6 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
                 // Do nothing.
             } else {
                 aida::Block_list sub_B_list;
-                B_induced.compute_col_batches();
                 decomposer(B_induced, sub_B_list);
                 int max_dim = 0;
                 for(Block& sub_B : sub_B_list){
@@ -557,9 +558,9 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
         }
 
         // std::sort(slopes[i].begin(), slopes[i].end());
-        current_grid_degree.first += grid_step.first;
+        current_grid_degree[0] += grid_step[0];
       }
-      current_grid_degree.second += grid_step.second;
+      current_grid_degree[1] += grid_step[1];
     }
 
     std::cout << std::endl;
@@ -573,6 +574,7 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
 
     // write_slopes_to_csv(slopes, grid_points, "slopes.csv");
 
+    }
 }
 
 template<typename Container, typename Outputstream>
@@ -580,7 +582,10 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     Outputstream& ostream, 
     const int& grid_length_x, const int& grid_length_y, 
     Container& indecomps, const bool restrict_dim = true) {
-
+    if constexpr (needs_editable_presentation_v<typename Container::value_type> || std::is_const_v<Container>) {
+        auto working = editable_presentations(indecomps);
+        process_summands_smart_grid(decomposer, ostream, grid_length_x, grid_length_y, working, restrict_dim);
+    } else {
     vec<Dynamic_HNF> local_grid_row_data;
     vec<vec<vec<SparseMatrix<int>>>> subspaces;
     if(restrict_dim){
@@ -633,13 +638,13 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     r2degree current_grid_degree = lower_bound - grid_step;
 
     for(int j = 0; j < grid_length_y; j++){ 
-        current_grid_degree.first = lower_bound.first - grid_step.first*0.999; // Reset x-coordinate for each y-coordinate
-        current_grid_degree.second = lower_bound.second + j*grid_step.second;
+        current_grid_degree[0] = lower_bound[0] - grid_step[0]*0.999; // Reset x-coordinate for each y-coordinate
+        current_grid_degree[1] = lower_bound[1] + j*grid_step[1];
         // First in y direction, we recompute all local decompositions whenever necessary.
         update_HNF_rows_at_y_level(current_grid_degree, indecomps, grid_locations, local_grid_row_data, decomposer, slope_bounds, subspaces);
         
         for(int i = 0; i < grid_length_x; i++){
-            current_grid_degree.first += grid_step.first; 
+            current_grid_degree[0] += grid_step[0];
             // Then we need to check if we have crossed into a new grid-square in any local grid.    
             update_grid_locations_x(current_grid_degree, indecomps, grid_locations);
 
@@ -686,6 +691,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
     calculate_stats(grid_ind_dimensions);
     std::cout << "  The dimensions of the composition factors at the grid points are distributed as:" << std::endl;
     calculate_stats(all_scss_dimensions);
+    }
 }
 
 // Keep one working presentation per module for the entire grid computation:

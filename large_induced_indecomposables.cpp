@@ -1,33 +1,34 @@
-#include "grlina/r2graded_matrix.hpp"
+#include "dynamic_matrix_adapter.hpp"
 #include "grlina/graded_linalg.hpp"
 #include "aida_interface.hpp"
 #include <iostream>
 #include <filesystem>
   
 using namespace graded_linalg;
+using hnf::R2Mat;
+using hnf::R2PModule;
 
 
 
 
-void large_induced_indecomp_submodules(R2Module<int>& module,
+void large_induced_indecomp_submodules(R2PModule& module,
     std::filesystem::path output_dir, 
     vec<int>& counter ) {
 
     aida::AIDA_functor decomposer = aida::AIDA_functor();
-    R2GradedSparseMatrix<int>& pres = module.mutable_presentation();
-    pres.compute_grid_representation();
-    pres.sort_columns_lexicographically();
-    pres.compute_col_batches();
+    R2Mat& pres = module.mutable_presentation();
+    hnf::require_two_parameters(pres);
+    pres.sort_compatibly();
     bool interval_enabled = true;
     int interval = 20;
     int pause_counter_x = interval;
     int pause_counter_y = interval;
     bool pause = false;
     vec<pair<int>> checked_list = vec<pair<int>>();
-    for(int i = 0; i < pres.x_grid.size(); i++){
-        const double& d = pres.x_grid[i];
-        for(int j = 0; j < pres.y_grid.size(); j++){
-            const double& e = pres.y_grid[j];
+    for(int i = 0; i < pres.grid(0).size(); i++){
+        const double& d = pres.grid(0)[i];
+        for(int j = 0; j < pres.grid(1).size(); j++){
+            const double& e = pres.grid(1)[j];
             std::pair<int, int> current_index = {i, j};
             bool in_interval = false;
             if(interval_enabled){
@@ -43,8 +44,7 @@ void large_induced_indecomp_submodules(R2Module<int>& module,
                 }
             }
             r2degree degree = {d, e};
-            R2GradedSparseMatrix<int> submodule = pres.submodule_generated_at(degree);
-            submodule.compute_col_batches();
+            R2Mat submodule = pres.submodule_generated_at(degree);
             aida::Block_list B_list;
             if(false){
                 int dim = submodule.get_num_rows();
@@ -68,7 +68,7 @@ void large_induced_indecomp_submodules(R2Module<int>& module,
             for(const auto& ind : B_list){
                 int dim = ind.get_num_rows();
                 if(dim > 1 && counter[dim] < 10){
-                    // ind.to_stream_r2(std::cout);
+                    // ind.to_stream(std::cout);
                     // Create filename in the output directory
                     std::string filename = std::to_string(dim) + "_" + std::to_string(counter[dim]) + ".scc";
                     std::filesystem::path specific_output_path = output_dir / filename;
@@ -90,16 +90,16 @@ void large_induced_indecomp_submodules(R2Module<int>& module,
 
 void large_induced_indecomp_submodules_from_sum(std::filesystem::path input_path, 
         std::filesystem::path output_dir) {
-    std::vector<R2GradedSparseMatrix<int>> matrices;
+    std::vector<R2Mat> matrices;
     std::ifstream input_file(input_path);
     if (!input_file.is_open()) {
         std::cerr << "Error opening file: " << input_path << std::endl;
         return;
     }
-    read_sccsum<int, std::ifstream>(matrices, input_file);
+    read_sccsum(matrices, input_file);
     vec<int> counter = vec<int>(50,0);
     for(auto& pres : matrices){
-        R2Module<int> module(std::move(pres));
+        R2PModule module(std::move(pres));
         large_induced_indecomp_submodules(module, output_dir, counter);
     }
 }
@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
     if (is_decomp_file(input_path)) {
         large_induced_indecomp_submodules_from_sum(input_path, output_dir);
     } else {
-        R2Module<int> module(input_path.string());
+        R2PModule module(input_path.string());
         vec<int> counter = vec<int>(50,0);
         large_induced_indecomp_submodules(module, output_dir, counter);
     }

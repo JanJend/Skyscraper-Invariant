@@ -8,10 +8,7 @@ HN_factors split_into_intervals(Uni_B1& stable_module){
     double slope = stable_module.slope_value;
     
     while(pres.get_num_rows() > 0){
-        R2Mat subspace = R2Mat(1, pres.get_num_rows());
-        subspace.data = {{0}};
-        subspace.row_degrees = pres.row_degrees;
-        subspace.col_degrees = vec<r2degree>(1, pres.row_degrees[0]);
+        R2Mat subspace = graded_subspace(pres, SparseMatrix<int>(1, pres.get_num_rows(), array<int>{{0}}));
         R2Mat submodule_pres = pres.submodule_generated_by(subspace);
         submodule_pres.minimize();
         intervals.emplace_back(Uni_B1(submodule_pres));
@@ -109,9 +106,7 @@ vec<Uni_B1> get_slopes_at_dim(const R2Mat& X,
         if(num_gens == 0){
             continue;
         }
-        R2Mat subspace = R2Mat(ungraded_subspace);
-        subspace.row_degrees = X.row_degrees;
-        subspace.col_degrees = vec<r2degree>(num_gens, X.row_degrees[0]);
+        R2Mat subspace = graded_subspace(X, ungraded_subspace);
         assert(subspace.get_num_rows() == X.get_num_rows());
         assert(subspace.get_num_cols() == num_gens);
         R2Mat submodule_pres = X.submodule_generated_by(subspace);
@@ -136,9 +131,7 @@ void find_scss_of_dim(const R2Mat& X,
         if(num_gens == 0){
             continue;
         }
-        R2Mat subspace = R2Mat(ungraded_subspace);
-        subspace.row_degrees = X.row_degrees;
-        subspace.col_degrees = vec<r2degree>(num_gens, X.row_degrees[0]);
+        R2Mat subspace = graded_subspace(X, ungraded_subspace);
         assert(subspace.get_num_rows() == X.get_num_rows());
         assert(subspace.get_num_cols() == num_gens);
         R2Mat submodule_pres = X.submodule_generated_by(subspace);
@@ -161,7 +154,7 @@ Uni_B1 find_scss_bruteforce(const R2Mat& X,
     Uni_B1 scss = Uni_B1(X);
     scss.slope_value = 0.0;
     if(k == 1){
-        // Nothing to do?
+        scss.slope_value = scss.slope(bounds);
     } else {
         assert(k < 8);
         if(subspaces.size() < k){
@@ -212,6 +205,7 @@ void skyscraper_invariant(const R2Mat& input,
     const pair<r2degree>& bounds,
     const bool filter) {
     
+    require_two_parameters(input);
     R2Mat X = input;
 
     if(X.get_num_rows() ==1 ){
@@ -226,7 +220,7 @@ void skyscraper_invariant(const R2Mat& input,
     }
     if(X.get_num_rows() > 1){
         
-       // X.to_stream_r2(std::cout);
+       // X.to_stream(std::cout);
     }
     if(X.get_num_rows() >= 7){
         std::cout << "  Warning: Computing HNF for a module of dimension "

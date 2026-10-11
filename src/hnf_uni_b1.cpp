@@ -299,8 +299,8 @@ Arrangement subdivision_from_polynomials( const vec<SparseMatrix<int>>& subspace
                                                  const vec<R2Mat>& submodules,
                                                  const r2degree& cell_start, 
                                                  const r2degree& cell_end, const bool info = true) {
-    BoundingBox box{cell_start.first, cell_end.first, 
-                           cell_start.second, cell_end.second};
+    BoundingBox box{cell_start[0], cell_end[0],
+                           cell_start[1], cell_end[1]};
     // Build convex hull in dual space
     std::vector<Point_3> dual_points = dual_points_polys(polynomials);
     std::map<Point_3, size_t> point_to_index;
@@ -442,12 +442,12 @@ int Uni_B1::dim_at(r2degree alpha) {
 
 double Uni_B1::area() const {
     auto [min, max] = d1.bounding_box();
-    double base_area = d1.get_num_rows()*(max.first - min.first) * (max.second - min.second);
+    double base_area = d1.get_num_rows()*(max[0] - min[0]) * (max[1] - min[1]);
     for(const auto& degree : d1.col_degrees){
-        base_area -= (max.first - degree.first) * (max.second - degree.second);
+        base_area -= (max[0] - degree[0]) * (max[1] - degree[1]);
     }
     for(const auto& degree : d2.col_degrees){
-        base_area += (max.first - degree.first) * (max.second - degree.second);
+        base_area += (max[0] - degree[0]) * (max[1] - degree[1]);
     }
     return base_area;
 }
@@ -456,12 +456,12 @@ double Uni_B1::area() const {
 double Uni_B1::area(const r2degree& bound) const {
     auto [min, max] = d1.bounding_box();
     max = bound;
-    double base_area = d1.get_num_rows()*(max.first - min.first) * (max.second - min.second);
+    double base_area = d1.get_num_rows()*(max[0] - min[0]) * (max[1] - min[1]);
     for(const auto& degree : d1.col_degrees){
-        base_area -= (max.first - degree.first) * (max.second - degree.second);
+        base_area -= (max[0] - degree[0]) * (max[1] - degree[1]);
     }
     for(const auto& degree : d2.col_degrees){
-        base_area += (max.first - degree.first) * (max.second - degree.second);
+        base_area += (max[0] - degree[0]) * (max[1] - degree[1]);
     }
     return base_area;
 }
@@ -470,25 +470,25 @@ double Uni_B1::area(const r2degree& bound) const {
 double Uni_B1::area(const pair<r2degree>& bounds) const {
     auto [min, max] = d1.bounding_box();
     max = bounds.second;
-    assert(max.first >= min.first);
-    assert(max.second >= min.second);
+    assert(max[0] >= min[0]);
+    assert(max[1] >= min[1]);
     assert(min == d1.row_degrees[0]);
     r2degree range = bounds.second-bounds.first;
-    double range_area = range.first * range.second;
-    double base_area = d1.get_num_rows()*(max.first - min.first)*(max.second - min.second);
+    double range_area = range[0] * range[1];
+    double base_area = d1.get_num_rows()*(max[0] - min[0])*(max[1] - min[1]);
     for(const auto& degree : d1.col_degrees){
-        assert(degree.first <= max.first);
-        assert(degree.second <= max.second);
-        assert(degree.first >= min.first);
-        assert(degree.second >= min.second);
-        base_area -= (max.first - degree.first) * (max.second - degree.second);
+        assert(degree[0] <= max[0]);
+        assert(degree[1] <= max[1]);
+        assert(degree[0] >= min[0]);
+        assert(degree[1] >= min[1]);
+        base_area -= (max[0] - degree[0]) * (max[1] - degree[1]);
     }
     for(const auto& degree : d2.col_degrees){
-        assert(degree.first <= max.first);
-        assert(degree.second <= max.second);
-        assert(degree.first >= min.first);
-        assert(degree.second >= min.second);
-        base_area += (max.first - degree.first) * (max.second - degree.second);
+        assert(degree[0] <= max[0]);
+        assert(degree[1] <= max[1]);
+        assert(degree[0] >= min[0]);
+        assert(degree[1] >= min[1]);
+        base_area += (max[0] - degree[0]) * (max[1] - degree[1]);
     }
     double normalised_area = base_area/range_area;
     return normalised_area;
@@ -501,44 +501,44 @@ void Uni_B1::compute_area_polynomial(const pair<r2degree>& bounds) {
     bool test = true;
 
     r2degree range = bounds.second-bounds.first;
-    double range_area = range.first * range.second;
+    double range_area = range[0] * range[1];
 
     const r2degree& gen_degree = this->d1.row_degrees[0];
     area_polynomial.fill(0.0);
 
     r2degree gen_vector = bounds.second - gen_degree;
-    area_polynomial[0] += num_rows * gen_vector.first * gen_vector.second;
-    area_polynomial[1] -= num_rows * gen_vector.second;
-    area_polynomial[2] -= num_rows * gen_vector.first;
+    area_polynomial[0] += num_rows * gen_vector[0] * gen_vector[1];
+    area_polynomial[1] -= num_rows * gen_vector[1];
+    area_polynomial[2] -= num_rows * gen_vector[0];
 
     for(const auto& degree : d1.col_degrees){
         assert( Degree_traits<r2degree>::smaller_equal(degree, bounds.second));
         assert( Degree_traits<r2degree>::smaller_equal(bounds.first, degree) );
         r2degree rel_vector = bounds.second - degree;
-        area_polynomial[0] -= rel_vector.first* rel_vector.second;
+        area_polynomial[0] -= rel_vector[0]* rel_vector[1];
     }
 
     for(const auto& degree :  d1.col_degrees){
-        if(degree.first == gen_degree.first){
-            assert(bounds.second.second - degree.second >= 0);
-            area_polynomial[1] += (bounds.second.second - degree.second);
+        if(degree[0] == gen_degree[0]){
+            assert(bounds.second[1] - degree[1] >= 0);
+            area_polynomial[1] += (bounds.second[1] - degree[1]);
             if( area_polynomial[1] > 0){
                 std::cout << "Area polynomial[1] is positive: " << area_polynomial[1] << std::endl;
                 this->d1.print_graded();
-                std::cout << "Bounds: " << bounds.first.first << " " << bounds.first.second << " to "
-                    << bounds.second.first << " " << bounds.second.second << std::endl;
+                std::cout << "Bounds: " << bounds.first[0] << " " << bounds.first[1] << " to "
+                    << bounds.second[0] << " " << bounds.second[1] << std::endl;
                 std::cout << "Range area: " << range_area << std::endl;
                 assert(false);
             }
         }
-        if(degree.second == gen_degree.second){
-            assert(bounds.second.first - degree.first >= 0);
-            area_polynomial[2] += (bounds.second.first - degree.first);
+        if(degree[1] == gen_degree[1]){
+            assert(bounds.second[0] - degree[0] >= 0);
+            area_polynomial[2] += (bounds.second[0] - degree[0]);
             if( test && area_polynomial[2] > 0){
                 std::cout << "Area polynomial[2] is positive: " << area_polynomial[1] << std::endl;
                 this->d1.print_graded();
-                std::cout << "Bounds: " << bounds.first.first << " " << bounds.first.second << " to "
-                    << bounds.second.first << " " << bounds.second.second << std::endl;
+                std::cout << "Bounds: " << bounds.first[0] << " " << bounds.first[1] << " to "
+                    << bounds.second[0] << " " << bounds.second[1] << std::endl;
                 std::cout << "Range area: " << range_area << std::endl;
                 assert(false);
             }
@@ -549,7 +549,7 @@ void Uni_B1::compute_area_polynomial(const pair<r2degree>& bounds) {
         assert( Degree_traits<r2degree>::smaller_equal(degree, bounds.second));
         assert( Degree_traits<r2degree>::smaller_equal(bounds.first, degree) );
         r2degree rel_vector = bounds.second - degree;
-        area_polynomial[0] += rel_vector.first* rel_vector.second;
+        area_polynomial[0] += rel_vector[0]* rel_vector[1];
     }
     for(int i = 0; i < 3; i++){
         area_polynomial[i] /= range_area;
@@ -557,14 +557,14 @@ void Uni_B1::compute_area_polynomial(const pair<r2degree>& bounds) {
 }
 
 double Uni_B1::evaluate_area_polynomial(r2degree d) {
-    double& x = d.first;
-    double& y = d.second;
+    double& x = d[0];
+    double& y = d[1];
     return area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y;
 }
 
 double Uni_B1::evaluate_slope_polynomial(r2degree d) {
-    double& x = d.first;
-    double& y = d.second;
+    double& x = d[0];
+    double& y = d[1];
     int k = this->d1.get_num_rows();
     return k / (area_polynomial[0] + area_polynomial[1]*x + area_polynomial[2]*y + x*y);
 }

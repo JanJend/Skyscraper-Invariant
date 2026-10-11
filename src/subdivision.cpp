@@ -310,8 +310,8 @@ Arrangement subdivision_from_polynomials( const vec<SparseMatrix<int>>& subspace
                                                  const vec<R2Mat>& submodules,
                                                  const r2degree& cell_start, 
                                                  const r2degree& cell_end, const bool info = true) {
-    BoundingBox box{cell_start.first, cell_end.first, 
-                           cell_start.second, cell_end.second};
+    BoundingBox box{cell_start[0], cell_end[0],
+                           cell_start[1], cell_end[1]};
     // Build convex hull in dual space
     std::vector<Point_3> dual_points = dual_points_polys(polynomials);
     std::map<Point_3, size_t> point_to_index;
@@ -376,9 +376,7 @@ Slope_subdivision compute_slope_subdivision(Uni_B1& res,
         //skip i = 0, because it is the empty space
         auto ungraded_subspace = subspaces[k-1][i];
         int num_gens = ungraded_subspace.get_num_cols();
-        R2Mat subspace = R2Mat(ungraded_subspace);
-        subspace.row_degrees = X.row_degrees;
-        subspace.col_degrees = vec<r2degree>(num_gens, X.row_degrees[0]);
+        R2Mat subspace = graded_subspace(X, ungraded_subspace);
             assert(subspace.get_num_rows() == X.get_num_rows());
             assert(subspace.get_num_cols() == num_gens);
         submodules.emplace_back(X.submodule_generated_by(subspace));

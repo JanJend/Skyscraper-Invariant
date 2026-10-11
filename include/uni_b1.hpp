@@ -3,14 +3,11 @@
 #ifndef UNI_B1_HPP
 #define UNI_B1_HPP
 
-#include "grlina/graded_linalg.hpp"
+#include "dynamic_matrix_adapter.hpp"
 
 using namespace graded_linalg;
 
 namespace hnf{
-
-using R2Mat = R2GradedSparseMatrix<int>;
-using R2PModule = R2Module<int>;
 
 inline R2Mat& module_presentation(R2Mat& matrix) { return matrix; }
 inline const R2Mat& module_presentation(const R2Mat& matrix) { return matrix; }
@@ -18,24 +15,29 @@ inline const R2Mat& module_presentation(const R2Mat& matrix) { return matrix; }
 // them a working copy so querying a module preserves every resolution map.
 inline R2Mat module_presentation(const R2PModule& module) {
     R2Mat working = module.presentation();
-    working.compute_grid_representation();
     return working;
 }
 inline R2Mat module_presentation(R2PModule& module) {
     return module_presentation(static_cast<const R2PModule&>(module));
 }
+template<class Input, std::enable_if_t<needs_editable_presentation_v<Input>, int> = 0>
+R2Mat module_presentation(const Input& input) { return editable_presentation(input); }
+template<class Input, std::enable_if_t<needs_editable_presentation_v<Input>, int> = 0>
+R2Mat module_presentation(Input& input) { return editable_presentation(input); }
 
-template <typename MatrixLike>
+template <typename MatrixLike, std::enable_if_t<std::is_base_of_v<R2Mat, MatrixLike>, int> = 0>
 R2Mat& module_presentation(MatrixLike& matrix) { return static_cast<R2Mat&>(matrix); }
 
-template <typename MatrixLike>
+template <typename MatrixLike, std::enable_if_t<std::is_base_of_v<R2Mat, MatrixLike>, int> = 0>
 const R2Mat& module_presentation(const MatrixLike& matrix) { return static_cast<const R2Mat&>(matrix); }
 
 // Forward declarations
 
 struct Uni_B1;
 
-struct Uni_B1 : R2Resolution<int> {
+struct Uni_B1 {
+    R2Mat d1;
+    R2Mat d2;
     double slope_value;
     std::array<double, 3> area_polynomial;
 
@@ -49,10 +51,21 @@ struct Uni_B1 : R2Resolution<int> {
     Uni_B1(R2Mat&& d1_, bool is_minimal = false);
     Uni_B1(const R2Mat& d1_, bool is_minimal = false);
     Uni_B1(const R2PModule& module, bool is_minimal = false);
+    template<class Matrix, std::enable_if_t<is_adapted_matrix<Matrix>::value, int> = 0>
+    Uni_B1(const Matrix& matrix, bool is_minimal = false)
+        : Uni_B1(editable_presentation(matrix), is_minimal) {}
+    template<class Matrix, std::enable_if_t<is_adapted_matrix<Matrix>::value, int> = 0>
+    Uni_B1(const Module<Matrix>& module, bool is_minimal = false)
+        : d1(editable_presentation(module)) {
+        if (module.projective_resolution().size() > 1)
+            d2 = editable_presentation(module.projective_resolution()[1]);
+        else
+            d2 = Uni_B1(d1, is_minimal).d2;
+    }
 
     // Copy constructor
     Uni_B1(const Uni_B1& other) 
-        : R2Resolution<int>(other), area_polynomial(other.area_polynomial), slope_value(other.slope_value) {
+        : d1(other.d1), d2(other.d2), area_polynomial(other.area_polynomial), slope_value(other.slope_value) {
     }
     
     // Move constructor (already have)
@@ -64,7 +77,8 @@ struct Uni_B1 : R2Resolution<int> {
     // Copy assignment
     Uni_B1& operator=(const Uni_B1& other) {
         if (this != &other) {
-            R2Resolution<int>::operator=(other);
+            d1 = other.d1;
+            d2 = other.d2;
             area_polynomial = other.area_polynomial;
             slope_value = other.slope_value;
         }
