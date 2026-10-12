@@ -16,17 +16,16 @@ void get_arrangement(std::filesystem::path& input_path,
     }
 
     R2PModule module(input_path.string());
-    R2GradedSparseMatrix<int>& M = module.mutable_presentation();
+    R2Mat& M = module.mutable_presentation();
     int k = M.get_num_rows();
-    auto perm = M.compute_grid_representation();
-    pair<r2degree> bounding_box = M.bounding_box();
+    pair<r2degree> bounding_box = geometry_bounds(M);
 
     // enlarging bounding box to see whole arrangement
     
-    assert(M.x_grid.size() >= 2 && M.y_grid.size() >= 2);
-    double cell_end_x = M.x_grid[1];
-    double cell_end_y = M.y_grid[1];
-    r2degree cell_start = {M.x_grid[0], M.y_grid[0]};
+    assert(M.grid(0).size() >= 2 && M.grid(1).size() >= 2);
+    double cell_end_x = M.grid(0)[1];
+    double cell_end_y = M.grid(1)[1];
+    r2degree cell_start = {M.grid(0)[0], M.grid(1)[0]};
     r2degree cell_boundary = {cell_end_x, cell_end_y};
     cell_boundary = bounding_box.second;
     r2degree range = bounding_box.second - bounding_box.first;
@@ -36,12 +35,12 @@ void get_arrangement(std::filesystem::path& input_path,
     cell_boundary = cell_boundary + large_padding;
     // cell_start = {-2, -2};
     // cell_boundary = {2, 2};
-    std::cout << "Computing arrangement in the box: (" << cell_start.first << ", " << cell_start.second 
-        << ") to (" << cell_boundary.first << ", " << cell_boundary.second << ")\n";
+    std::cout << "Computing arrangement in the box: (" << cell_start[0] << ", " << cell_start[1]
+        << ") to (" << cell_boundary[0] << ", " << cell_boundary[1] << ")\n";
     Uni_B1 M_res(module);
     auto subspaces = all_sparse_subspaces(k);
     Slope_subdivision slope_subdiv = compute_slope_subdivision(M_res, bounding_box, subspaces, cell_start, cell_boundary);
-    slope_subdiv.export_to_svg(output_path.string(), bounding_box.first.first, bounding_box.first.second);
+    slope_subdiv.export_to_svg(output_path.string(), bounding_box.first[0], bounding_box.first[1]);
 }
 
 int main(int argc, char** argv) {

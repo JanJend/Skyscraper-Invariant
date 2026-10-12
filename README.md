@@ -101,6 +101,22 @@ sudo make install
 
 Debug builds append a `_debug` suffix to executables.
 
+### Matrix inputs
+
+The C++ entry points accept `CoordGradedSparseMatrix<Scalar, Dimension, Index>`,
+`GridGradedSparseMatrix<Scalar, Dimension, Index>`,
+`R2GradedSparseMatrix<Index, Storage>`, and modules over these types.
+`R2CSCMat` is `R2GradedSparseMatrix<int, CSCStorage<int>>`.
+CSC entries are copied into editable vector columns before computation. Direct
+coordinates are embedded in a grid; grid inputs retain their unused coordinates.
+Both fixed and smart grid computations keep one working copy for the entire run.
+The caller's matrices and stored resolutions are preserved.
+
+The invariant requires two grading parameters. Its existing geometry uses
+`double` and its combinatorial core uses `int`: coordinates must be exactly
+representable as doubles, and ranks and grid-axis sizes must fit `int`.
+Conversion fails explicitly rather than merging distinct coordinates.
+
 ---
 
 ## Usage

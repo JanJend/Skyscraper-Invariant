@@ -38,6 +38,23 @@ inline void skyscraper_invariant(const R2PModule& input,
     skyscraper_invariant(input.presentation(), result, subspaces, bounds, filter);
 }
 
+template<class Matrix, std::enable_if_t<is_adapted_matrix<Matrix>::value, int> = 0>
+void skyscraper_invariant(const Matrix& input,
+    vec<HN_factors>& result,
+    vec<vec<vec<SparseMatrix<int>>>>& subspaces,
+    const pair<r2degree>& bounds, const bool filter = false) {
+    auto working = editable_presentation(input);
+    skyscraper_invariant(working, result, subspaces, bounds, filter);
+}
+
+template<class Matrix, std::enable_if_t<is_adapted_matrix<Matrix>::value, int> = 0>
+void skyscraper_invariant(const Module<Matrix>& input,
+    vec<HN_factors>& result,
+    vec<vec<vec<SparseMatrix<int>>>>& subspaces,
+    const pair<r2degree>& bounds, const bool filter = false) {
+    skyscraper_invariant(input.presentation(), result, subspaces, bounds, filter);
+}
+
 template<typename Container>
 vec<HN_factors> skyscraper_invariant_sum(Container& summands,
         vec<vec<vec<SparseMatrix<int>>>>& subspaces,
@@ -57,6 +74,7 @@ void skyscraper_invariant_sum_append(Container& summands,
         const pair<r2degree>& bounds, const bool filter = false) {
     for(auto& summand : summands){
         auto&& X = module_presentation(summand);
+        require_two_parameters(X);
         if(X.get_num_rows() == 0){
             continue;
         } else if(X.get_num_rows() == 1){
