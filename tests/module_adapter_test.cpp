@@ -24,9 +24,9 @@ Matrix coordinate_input(const R2Mat& reference) {
     graded_linalg::GradedMatrixIO<Matrix>::assign_degrees(result,
         degrees(reference.real_col_degrees()), degrees(reference.real_row_degrees()));
     if constexpr (graded_linalg::matrix_grid_backed_v<Matrix>) {
-        typename Matrix::grid_type grids;
+        typename Matrix::Grid grids;
         for (std::size_t axis = 0; axis < 2; ++axis)
-            grids[axis].assign(reference.grids[axis].begin(), reference.grids[axis].end());
+            grids[axis].assign(reference.grid_[axis].begin(), reference.grid_[axis].end());
         result.reindex_grid(std::move(grids));
     }
     return result;
@@ -62,14 +62,14 @@ void accepts_coordinate_type() {
     R2PModule resolution(reference);
     resolution.compute_projective_resolution();
     vec<Matrix> maps;
-    for (const auto& map : resolution.projective_resolution().differentials()) maps.push_back(coordinate_input<Matrix>(map));
+    for (const auto& map : resolution.proj_res_.differentials()) maps.push_back(coordinate_input<Matrix>(map));
     const auto module = Module<Matrix>::from_projective_resolution(ChainComplex<Matrix>(maps), ResolutionCompleteness::complete);
     actual.clear();
     skyscraper_invariant(module, actual, subspaces, {{0,0},{5,5}});
     same_factors(actual, expected);
     Uni_B1 resolved(module);
-    assert(resolved.d2.data == resolution.projective_resolution()[1].data);
-    assert(resolved.d2.real_col_degrees() == resolution.projective_resolution()[1].real_col_degrees());
+    assert(resolved.d2.data == resolution.proj_res_[1].data);
+    assert(resolved.d2.real_col_degrees() == resolution.proj_res_[1].real_col_degrees());
     const vec<Matrix> matrices{input};
     const vec<Module<Matrix>> modules{module};
     same_factors(skyscraper_invariant_sum(matrices, subspaces, {{0,0},{5,5}}), expected);
@@ -96,11 +96,11 @@ void accepts_coordinate_type() {
         assert(module_output.str() == expected_output.str());
     }
     assert(input.data == before.data && input.col_degrees == before.col_degrees && input.row_degrees == before.row_degrees);
-    if constexpr (graded_linalg::matrix_grid_backed_v<Matrix>) assert(input.grids == before.grids);
+    if constexpr (graded_linalg::matrix_grid_backed_v<Matrix>) assert(input.grid_ == before.grid_);
     for (std::size_t i = 0; i < maps.size(); ++i) {
-        const auto& map = module.projective_resolution()[i];
+        const auto& map = module.proj_res_[i];
         assert(map.data == maps[i].data && map.col_degrees == maps[i].col_degrees && map.row_degrees == maps[i].row_degrees);
-        if constexpr (graded_linalg::matrix_grid_backed_v<Matrix>) assert(map.grids == maps[i].grids);
+        if constexpr (graded_linalg::matrix_grid_backed_v<Matrix>) assert(map.grid_ == maps[i].grid_);
     }
 }
 } // namespace
@@ -137,13 +137,13 @@ int main() {
     R2PModule M(P);
     M.compute_projective_resolution();
     const auto before_d1 = M.presentation();
-    const auto before_d2 = M.projective_resolution()[1];
+    const auto before_d2 = M.proj_res_[1];
     auto working = module_presentation(M);
     working.minimize_variant();
-    assert(M.projective_resolution().size() == 2);
+    assert(M.proj_res_.size() == 2);
     assert(M.presentation().data == before_d1.data);
     assert(M.presentation().col_degrees == before_d1.col_degrees);
-    assert(M.projective_resolution()[1].data == before_d2.data);
+    assert(M.proj_res_[1].data == before_d2.data);
     Uni_B1 interval(M);
     assert(interval.d2.data == before_d2.data);
     assert(interval.area() == 1.0);
@@ -172,15 +172,15 @@ int main() {
     // Real geometry must use the embedding, not the integer degree positions.
     R2PModule rectangle(R2Mat(2, 1, {{0}, {0}}, {{6.5,3}, {2.5,7}}, {{2.5,3}}));
     rectangle.compute_projective_resolution();
-    assert(rectangle.projective_resolution().size() == 2);
-    assert((rectangle.projective_resolution()[0] * rectangle.projective_resolution()[1]).is_zero());
+    assert(rectangle.proj_res_.size() == 2);
+    assert((rectangle.proj_res_[0] * rectangle.proj_res_[1]).is_zero());
     Uni_B1 rectangle_factor(rectangle);
     assert(rectangle_factor.area() == 16.0);
     assert(real_col_degree(rectangle_factor.d2, 0) == r2degree({6.5,7}));
-    auto last_map = rectangle.projective_resolution()[1];
+    auto last_map = rectangle.proj_res_[1];
     const auto next_kernel = last_map.graded_kernel();
     assert(next_kernel.get_num_cols() == 0);
-    assert(next_kernel.grids == last_map.grids);
+    assert(next_kernel.grid_ == last_map.grid_);
 
     // The two independent rectangles have areas ten and five. Finding their
     // filtration exercises submodule kernels and a quotient between factors.
@@ -206,7 +206,7 @@ int main() {
     R2PModule resolved_vector(with_unused_grid);
     resolved_vector.compute_projective_resolution();
     vec<R2CSCMat> compressed_maps;
-    for (const auto& map : resolved_vector.projective_resolution().differentials())
+    for (const auto& map : resolved_vector.proj_res_.differentials())
         compressed_maps.push_back(coordinate_input<R2CSCMat>(map));
     const R2CSCModule compressed_module = R2CSCModule::from_projective_resolution(
         ChainComplex<R2CSCMat>(compressed_maps), ResolutionCompleteness::complete);
@@ -214,7 +214,7 @@ int main() {
     skyscraper_invariant(compressed_module, compressed_factors, subspaces, {{0,0}, {5,5}});
     same_factors(compressed_factors, vector_factors);
     Uni_B1 compressed_resolution(compressed_module);
-    assert(compressed_resolution.d2.data == resolved_vector.projective_resolution()[1].data);
+    assert(compressed_resolution.d2.data == resolved_vector.proj_res_[1].data);
     assert(compressed_resolution.d2.real_col_degrees() == compressed_maps[1].col_degrees);
     assert(Uni_B1(compressed).area() == Uni_B1(with_unused_grid).area());
     for (bool smart : {false, true}) {
@@ -243,7 +243,7 @@ int main() {
     assert(compressed.col_degrees == compressed_before.col_degrees);
     assert(compressed.row_degrees == compressed_before.row_degrees);
     for (std::size_t i = 0; i < compressed_maps.size(); ++i) {
-        const auto& map = compressed_module.projective_resolution()[i];
+        const auto& map = compressed_module.proj_res_[i];
         assert(map.data == compressed_maps[i].data);
         assert(map.col_degrees == compressed_maps[i].col_degrees);
         assert(map.row_degrees == compressed_maps[i].row_degrees);
@@ -302,6 +302,6 @@ int main() {
         assert(module_output.str() == matrix_output.str());
         assert(modules[0].presentation().data == strip.presentation().data);
         assert(modules[0].presentation().col_degrees == strip.presentation().col_degrees);
-        assert(modules[0].has_complete_projective_resolution());
+        assert(modules[0].res_complete_);
     }
 }

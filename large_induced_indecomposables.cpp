@@ -3,6 +3,7 @@
 #include "aida_interface.hpp"
 #include <iostream>
 #include <filesystem>
+#include <grlina/matrices/matrix_algorithms.hpp>
   
 using namespace graded_linalg;
 using hnf::R2Mat;
@@ -16,7 +17,10 @@ void large_induced_indecomp_submodules(R2PModule& module,
     vec<int>& counter ) {
 
     aida::AIDA_functor decomposer = aida::AIDA_functor();
-    R2Mat& pres = module.mutable_presentation();
+    module.proj_res_.differentials().resize(1);
+    module.res_complete_ = false;
+    module.inj_res_.clear();
+    R2Mat& pres = module.presentation();
     hnf::require_two_parameters(pres);
     pres.sort_compatibly();
     bool interval_enabled = true;

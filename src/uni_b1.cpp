@@ -13,9 +13,9 @@ Uni_B1::Uni_B1(const R2Mat& d1_, bool /*is_minimal*/) : d1(d1_) {
 
 Uni_B1::Uni_B1(const R2PModule& module, bool is_minimal) {
     require_two_parameters(module.presentation());
-    if (module.projective_resolution().size() > 1) {
+    if (module.proj_res_.size() > 1) {
         d1 = module.presentation();
-        d2 = module.projective_resolution()[1];
+        d2 = module.proj_res_[1];
     } else {
         const Uni_B1 resolution(module.presentation(), is_minimal);
         d1 = resolution.d1;

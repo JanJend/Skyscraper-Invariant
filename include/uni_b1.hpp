@@ -57,8 +57,8 @@ struct Uni_B1 {
     template<class Matrix, std::enable_if_t<is_adapted_matrix<Matrix>::value, int> = 0>
     Uni_B1(const Module<Matrix>& module, bool is_minimal = false)
         : d1(editable_presentation(module)) {
-        if (module.projective_resolution().size() > 1)
-            d2 = editable_presentation(module.projective_resolution()[1]);
+        if (module.proj_res_.size() > 1)
+            d2 = editable_presentation(module.proj_res_[1]);
         else
             d2 = Uni_B1(d1, is_minimal).d2;
     }

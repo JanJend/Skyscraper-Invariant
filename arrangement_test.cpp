@@ -16,7 +16,7 @@ void get_arrangement(std::filesystem::path& input_path,
     }
 
     R2PModule module(input_path.string());
-    R2Mat& M = module.mutable_presentation();
+    R2Mat& M = module.presentation();
     int k = M.get_num_rows();
     pair<r2degree> bounding_box = geometry_bounds(M);
 

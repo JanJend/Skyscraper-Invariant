@@ -5,9 +5,9 @@
 #pragma once
 
 #include <grlina/graded_linalg.hpp>
-#include <grlina/mat_coord.hpp>
-#include <grlina/mat_grid.hpp>
-#include <grlina/mat_csc.hpp>
+#include <grlina/matrices/coord.hpp>
+#include <grlina/matrices/grid.hpp>
+#include <grlina/storage/csc.hpp>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -113,10 +113,10 @@ R2Mat editable_presentation(const Matrix& matrix) {
             // Keep every axis value: unused points can still define support
             // bounds or give meaning to degrees in later kernel computations.
             for (std::size_t axis = 0; axis < 2; ++axis) {
-                detail::skyscraper_index(matrix.grids[axis].size());
-                result.grids[axis].clear();
-                for (auto value : matrix.grids[axis])
-                    result.grids[axis].push_back(detail::skyscraper_coordinate(value));
+                detail::skyscraper_index(matrix.grid_[axis].size());
+                result.grid_[axis].clear();
+                for (auto value : matrix.grid_[axis])
+                    result.grid_[axis].push_back(detail::skyscraper_coordinate(value));
             }
             auto degrees = [](const auto& source) {
                 graded_linalg::vec<R2Mat::degree_type> converted;
@@ -132,7 +132,7 @@ R2Mat editable_presentation(const Matrix& matrix) {
             // Direct-coordinate matrices have no axes to preserve. Construct
             // an exact grid embedding from their physical row and column grades.
             auto degrees = [](const auto& source) {
-                graded_linalg::vec<R2Mat::real_degree_type> converted;
+                graded_linalg::vec<R2Mat::GridD> converted;
                 converted.reserve(source.size());
                 for (auto degree : source)
                     converted.push_back({detail::skyscraper_coordinate(degree[0]),

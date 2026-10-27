@@ -8,7 +8,7 @@ using namespace hnf;
 void hnf_at_origin(std::filesystem::path input_path, r2degree upper_bound, bool filter) {
     
     R2PModule X(input_path.string());
-    int dim = X.number_of_generators();
+    int dim = X.num_of_gens();
     pair<r2degree> bounds = geometry_bounds(X.presentation());
     if(upper_bound != r2degree{0,0}){
         bounds.second = upper_bound;
