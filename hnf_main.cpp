@@ -3,7 +3,7 @@
 namespace fs = std::filesystem;
 
 struct ProgramConfig {
-    aida::AIDA_functor decomposer;
+    aida::AIDA_functor<> decomposer;
     bool write_output = false;
     bool diagonal_output = false;
     bool show_indecomp_statistics = false;
@@ -26,7 +26,7 @@ struct FileInfo {
     std::string extension = ".sky";
 };
 
-void initialize_decomposer_config(aida::AIDA_functor& decomposer) {
+void initialize_decomposer_config(aida::AIDA_functor<>& decomposer) {
     decomposer.config.brute_force = true; // There is currently sometimes a bug in aida when this is false.
     decomposer.config.exhaustive = false;
     decomposer.config.sort = false;

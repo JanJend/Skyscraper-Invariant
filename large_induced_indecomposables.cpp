@@ -16,7 +16,7 @@ void large_induced_indecomp_submodules(R2PModule& module,
     std::filesystem::path output_dir, 
     vec<int>& counter ) {
 
-    aida::AIDA_functor decomposer = aida::AIDA_functor();
+    aida::AIDA_functor<> decomposer = aida::AIDA_functor<>();
     module.proj_res_.differentials().resize(1);
     module.res_complete_ = false;
     module.inj_res_.clear();

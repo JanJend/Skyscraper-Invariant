@@ -156,7 +156,7 @@ Dynamic_HNF::Dynamic_HNF() {
     grid_ind_dimensions = vec<int>();
 }
 
-void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor& decomposer,
+void Dynamic_HNF::compute_HNF_row(aida::AIDA_functor<>& decomposer,
         R2Mat& M, int& y_index, pair<r2degree> slope_bounds,
         const vec<vec<vec<SparseMatrix<int>>>>& subspaces) {
     assert(y_index > -1);

@@ -47,7 +47,7 @@ inline constexpr bool needs_editable_presentation_v =
 
 template <class Matrix>
 inline void require_two_parameters(const Matrix& matrix) {
-    if (std::tuple_size<graded_linalg::matrix_geometry_degree_t<Matrix>>::value != 2)
+    if (std::tuple_size<typename Matrix::degree_type>::value != 2)
         throw std::invalid_argument("The skyscraper invariant requires two grading parameters");
 }
 
@@ -119,7 +119,7 @@ R2Mat editable_presentation(const Matrix& matrix) {
                     result.grid_[axis].push_back(detail::skyscraper_coordinate(value));
             }
             auto degrees = [](const auto& source) {
-                graded_linalg::vec<R2Mat::degree_type> converted;
+                graded_linalg::vec<graded_linalg::base_degree<R2Mat>> converted;
                 converted.reserve(source.size());
                 for (auto degree : source)
                     converted.push_back(
@@ -190,7 +190,7 @@ inline R2Mat graded_subspace(const R2Mat& parent, const graded_linalg::SparseMat
     auto result = parent.empty_like(basis.get_num_cols(), basis.get_num_rows());
     result.assign_data(basis.data);
     result.row_degrees = parent.row_degrees;
-    result.col_degrees = graded_linalg::vec<R2Mat::degree_type>(
+    result.col_degrees = graded_linalg::vec<graded_linalg::base_degree<R2Mat>>(
         basis.get_num_cols(), parent.row_degrees[0]);
     result.compatibly_sorted = parent.compatibly_sorted;
     return result;

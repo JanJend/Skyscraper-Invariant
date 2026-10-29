@@ -9,9 +9,9 @@ using namespace hnf;
 
 template<class Matrix>
 Matrix coordinate_input(const R2Mat& reference) {
-    using Degree = graded_linalg::matrix_geometry_degree_t<Matrix>;
+    using Degree = typename Matrix::degree_type;
     using Scalar = typename Degree::value_type;
-    using Index = typename Matrix::index_type;
+    using Index = graded_linalg::matrix_index_t<Matrix>;
     Matrix result(reference.get_num_cols(), reference.get_num_rows());
     graded_linalg::array<Index> columns;
     for (const auto& column : reference.data) columns.emplace_back(column.begin(), column.end());
@@ -78,7 +78,7 @@ void accepts_coordinate_type() {
     same_factors(actual, expected);
     for (bool smart : {false,true}) {
         vec<R2Mat> working{reference};
-        aida::AIDA_functor baseline, from_matrix, from_module;
+        aida::AIDA_functor<> baseline, from_matrix, from_module;
         baseline.config.show_info = baseline.config.progress = false;
         from_matrix.config.show_info = from_matrix.config.progress = false;
         from_module.config.show_info = from_module.config.progress = false;
@@ -139,6 +139,7 @@ int main() {
     const auto before_d1 = M.presentation();
     const auto before_d2 = M.proj_res_[1];
     auto working = module_presentation(M);
+    working.sort_compatibly();
     working.minimize_variant();
     assert(M.proj_res_.size() == 2);
     assert(M.presentation().data == before_d1.data);
@@ -157,7 +158,7 @@ int main() {
 
     // Instantiate AIDA's array-degree interface, which its CLI does not use.
     aida::multipers_interface_input<int> input{{{1,0}, {0,1}}, {{0,0}}, P.data};
-    aida::AIDA_functor decomposer;
+    aida::AIDA_functor<> decomposer;
     decomposer.config.show_info = decomposer.config.progress = false;
     auto output = decomposer.multipers_interface(input);
     assert(output.summands.size() == 1);
@@ -222,7 +223,7 @@ int main() {
         vec<R2Mat> editable{sum};
         const vec<R2CSCMat> matrices{compressed};
         const vec<R2CSCModule> modules{compressed_module};
-        aida::AIDA_functor vector_decomposer, matrix_decomposer, module_decomposer;
+        aida::AIDA_functor<> vector_decomposer, matrix_decomposer, module_decomposer;
         vector_decomposer.config.show_info = vector_decomposer.config.progress = false;
         matrix_decomposer.config.show_info = matrix_decomposer.config.progress = false;
         module_decomposer.config.show_info = module_decomposer.config.progress = false;
@@ -271,7 +272,7 @@ int main() {
     // two-generator presentation; output must retain the fractional endpoint.
     for (bool smart : {false, true}) {
         vec<R2Mat> matrices{sum};
-        aida::AIDA_functor grid_decomposer;
+        aida::AIDA_functor<> grid_decomposer;
         grid_decomposer.config.show_info = grid_decomposer.config.progress = false;
         std::ostringstream grid_output;
         if (smart)
@@ -288,7 +289,7 @@ int main() {
     for (bool smart : {false, true}) {
         vec<R2PModule> modules{strip};
         vec<R2Mat> matrices{strip.presentation()};
-        aida::AIDA_functor from_module, from_matrix;
+        aida::AIDA_functor<> from_module, from_matrix;
         from_module.config.show_info = from_matrix.config.show_info = false;
         from_module.config.progress = from_matrix.config.progress = false;
         std::ostringstream module_output, matrix_output;

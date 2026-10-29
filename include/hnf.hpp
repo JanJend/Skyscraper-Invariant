@@ -76,7 +76,7 @@ struct Dynamic_HNF {
     vec<int> grid_ind_dimensions;
 
     Dynamic_HNF();
-    void compute_HNF_row(aida::AIDA_functor& decomposer,
+    void compute_HNF_row(aida::AIDA_functor<>& decomposer,
         R2Mat& M,
         int& y_index,
         pair<r2degree> slope_bounds,
@@ -117,7 +117,7 @@ void update_HNF_rows_at_y_level(
     Container& indecomps,
     vec<pair<int>>& grid_locations,
     vec<Dynamic_HNF>& local_grid_row_data,
-    aida::AIDA_functor& decomposer,
+    aida::AIDA_functor<>& decomposer,
     const pair<r2degree>& slope_bounds,
     const vec<vec<vec<SparseMatrix<int>>>>& subspaces) {
 
@@ -262,7 +262,7 @@ void process_grid_cell(
     vec<int>& all_scss_dimensions,
     vec<vec<vec<SparseMatrix<int>>>>& subspaces,
     const pair<r2degree>& slope_bounds,
-    aida::AIDA_functor& decomposer,
+    aida::AIDA_functor<>& decomposer,
     const bool restrict_dim = true) {
     
     bool test = false;
@@ -416,7 +416,7 @@ void process_grid_cell(
 
 
 template<typename Container, typename Outputstream>
-void process_summands_fixed_grid(aida::AIDA_functor& decomposer, 
+void process_summands_fixed_grid(aida::AIDA_functor<>& decomposer,
     Outputstream& ostream, 
     const int& grid_length_x, const int& grid_length_y, 
     Container& indecomps) {
@@ -578,7 +578,7 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer,
 }
 
 template<typename Container, typename Outputstream>
-void process_summands_smart_grid(aida::AIDA_functor& decomposer, 
+void process_summands_smart_grid(aida::AIDA_functor<>& decomposer,
     Outputstream& ostream, 
     const int& grid_length_x, const int& grid_length_y, 
     Container& indecomps, const bool restrict_dim = true) {
@@ -697,7 +697,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer,
 // Keep one working presentation per module for the entire grid computation:
 // support bounds and grid state must survive between successive grid cells.
 template <typename Outputstream>
-void process_summands_fixed_grid(aida::AIDA_functor& decomposer, Outputstream& out,
+void process_summands_fixed_grid(aida::AIDA_functor<>& decomposer, Outputstream& out,
     const int& nx, const int& ny, vec<R2PModule>& modules) {
     vec<R2Mat> working;
     working.reserve(modules.size());
@@ -706,7 +706,7 @@ void process_summands_fixed_grid(aida::AIDA_functor& decomposer, Outputstream& o
 }
 
 template <typename Outputstream>
-void process_summands_smart_grid(aida::AIDA_functor& decomposer, Outputstream& out,
+void process_summands_smart_grid(aida::AIDA_functor<>& decomposer, Outputstream& out,
     const int& nx, const int& ny, vec<R2PModule>& modules, const bool restrict_dim = true) {
     vec<R2Mat> working;
     working.reserve(modules.size());
@@ -715,7 +715,7 @@ void process_summands_smart_grid(aida::AIDA_functor& decomposer, Outputstream& o
 }
 
 template <typename Outputstream>
-void full_grid_induced_decomposition(aida::AIDA_functor& decomposer,
+void full_grid_induced_decomposition(aida::AIDA_functor<>& decomposer,
     std::ifstream& istream, Outputstream& ostream, 
     bool show_indecomp_statistics, bool show_runtime_statistics, 
     bool dynamic_grid = true,

@@ -129,7 +129,7 @@ void Uni_B1::compute_area_polynomial(const pair<r2degree>& bounds) {
 void Uni_B1::compute_area_polynomial_unbounded(const pair<r2degree>& bounds) {
     int num_rows = d1.get_num_rows();
     assert(std::is_sorted(d1.col_degrees.begin(), d1.col_degrees.end(),
-                         Degree_traits<R2Mat::degree_type>::lex_lambda()));
+                         Degree_traits<graded_linalg::base_degree<R2Mat>>::lex_lambda()));
     bool test = true;
 
     r2degree range = bounds.second-bounds.first;
